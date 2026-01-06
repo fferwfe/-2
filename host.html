@@ -84,5 +84,28 @@ btnStart.onclick = async ()=>{
 };
 
 </script>
+<!-- Firebase Core -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+
+<!-- Firebase Realtime Database -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCmbM5JgUphfWil3ImVi7GFtVrfeE7jzm4",
+    authDomain: "fr44-31112.firebaseapp.com",
+    databaseURL: "https://fr44-31112-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "fr44-31112",
+    storageBucket: "fr44-31112.appspot.com",
+    messagingSenderId: "399575656230",
+    appId: "1:399575656230:web:e9bbdc7cc1d242a216c3e7"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
+
+
 </body>
 </html>
+
