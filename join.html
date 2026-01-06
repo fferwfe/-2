@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <title>加入遊戲</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body{font-family:"Microsoft JhengHei",system-ui;margin:30px}
+    input{width:100%;padding:12px;font-size:18px;margin:8px 0}
+    button{padding:12px;border-radius:10px;border:0;font-size:18px;font-weight:900;background:#2b6dff;color:#fff}
+    .err{color:red;font-weight:900}
+  </style>
+</head>
+<body>
+
+<h1>加入遊戲</h1>
+
+<input id="pin" placeholder="輸入 PIN">
+<input id="name" placeholder="自由命名（例：第一組、紅隊）">
+
+<button id="btnJoin">加入</button>
+<div class="err" id="err"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, setDoc,
+  serverTimestamp, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+/* 🔧 換成你自己的 firebaseConfig（三個檔案要一樣） */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const pinEl = document.getElementById("pin");
+const nameEl = document.getElementById("name");
+const errEl = document.getElementById("err");
+
+document.getElementById("btnJoin").onclick = async ()=>{
+  errEl.textContent="";
+  const pin = pinEl.value.trim();
+  const name = nameEl.value.trim();
+
+  if(!pin || !name){
+    errEl.textContent="請輸入 PIN 與名稱";
+    return;
+  }
+
+  const roomRef = doc(db,"rooms",pin);
+  const snap = await getDoc(roomRef);
+  if(!snap.exists()){
+    errEl.textContent="找不到房間";
+    return;
+  }
+
+  const playerId = crypto.randomUUID();
+  await setDoc(doc(db,"rooms",pin,"players",playerId),{
+    name,
+    joinedAt:serverTimestamp()
+  });
+
+  // 等待主持人開始
+  onSnapshot(roomRef, s=>{
+    if(s.data().status==="playing"){
+      location.href=`game.html?pin=${pin}&player=${playerId}`;
+    }
+  });
+};
+</script>
+</body>
+</html>

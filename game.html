@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>德國心臟病（Kahoot 同步版）</title>
+
+  <!-- QRCode（全域 QRCode 物件） -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+  <style>
+    body{font-family:system-ui,"Microsoft JhengHei";margin:20px;max-width:1200px}
+    .muted{opacity:.75}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+    button{padding:12px 16px;border:0;border-radius:12px;font-weight:900;cursor:pointer}
+    .primary{background:#2b6dff;color:#fff}
+    .secondary{background:#eee}
+    .danger{background:#ff3b30;color:#fff}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    code{background:#f2f2f2;padding:2px 6px;border-radius:6px}
+
+    .card{border:1px solid #ddd;border-radius:12px;padding:14px;margin-top:12px}
+    .big{font-size:20px;font-weight:900}
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:12px;
+      margin-top:12px;
+    }
+    @media (max-width: 900px){
+      .grid{grid-template-columns: repeat(2, minmax(0, 1fr));}
+    }
+    .slot{
+      border:1px solid #ddd;border-radius:14px;padding:10px;background:#fafafa;
+    }
+    .slotHead{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+    .slotName{font-weight:900}
+    .slotMeta{font-size:12px;opacity:.7}
+
+    .imgBox{
+      width:100%; aspect-ratio: 3/4;
+      border-radius:12px; overflow:hidden;
+      border:1px solid rgba(0,0,0,.12);
+      background:#111;
+      display:flex;align-items:center;justify-content:center;
+      margin-top:8px;
+    }
+    .imgBox img{width:100%;height:100%;object-fit:cover;display:block}
+    .fallback{color:#fff;font-size:12px;text-align:center;padding:10px;line-height:1.4}
+
+    /* Winner overlay animations */
+    @keyframes boom {
+      0%   { transform:scale(0.3); opacity:0; }
+      60%  { transform:scale(1.15); opacity:1; }
+      100% { transform:scale(1); opacity:1; }
+    }
+    @keyframes flash {
+      0%,100% { background:rgba(0,0,0,0.75); }
+      50%     { background:rgba(255,255,255,0.2); }
+    }
+    .winner-show { animation: flash 0.15s linear 3; }
+    .winner-text-show { animation: boom 0.4s cubic-bezier(.2,.9,.3,1.2) forwards; }
+  </style>
+</head>
+
+<body>
+  <h1>德國心臟病（同步版）</h1>
+  <div class="muted">
+    房間 PIN：<code id="pin"></code>
+    <span id="role" class="muted"></span>
+  </div>
+
+  <div class="card">
+    <div class="big" id="state">載入中…</div>
+    <div class="big" id="winnerTextLine">搶鈴：尚未有人搶到</div>
+
+    <!-- 主持人控制 -->
+    <div class="row" id="hostControls" style="display:none">
+      <button class="primary" id="btnFlip">翻牌（下一位）</button>
+
+      <button class="primary" id="btnAuto">開始自動播放</button>
+      <button class="secondary" id="btnPause" disabled>暫停</button>
+
+      <button class="secondary" id="btnResetRound">下一輪（清空牌面）</button>
+
+      <span class="muted" id="photoStatus">照片清單：尚未載入</span>
+      <span class="muted">快捷鍵：Space 播放/暫停、N 單步翻牌</span>
+    </div>
+
+    <!-- 玩家控制 -->
+    <div class="row" id="playerControls" style="display:none">
+      <button class="danger" id="btnBuzz">搶鈴！</button>
+    </div>
+
+    <div class="muted">
+      規則：翻牌固定順序「玩家1 → 玩家6」循環；每翻一張牌，自動開放一次搶鈴；第一個搶到者鎖定。
+    </div>
+  </div>
+
+  <!-- 主持人才看得到的：QR + 記分板 -->
+  <div class="card" id="hostExtras" style="display:none">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div>
+        <div class="big">📱 玩家加入（掃 QR 進 join.html）</div>
+        <div class="muted">join.html：<code id="joinUrl"></code></div>
+        <div class="muted">玩家進入後，輸入 PIN（上方）＋自由命名</div>
+      </div>
+      <canvas id="qrcode"></canvas>
+    </div>
+
+    <div style="margin-top:12px">
+      <div class="big">🏆 記分板</div>
+      <ul id="scoreBoard"></ul>
+      <div class="muted">計分：每次搶到 +1（以「自由命名」作為隊名/人名）</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="big">六位玩家牌面</div>
+    <div class="muted">固定順序：玩家1 → 玩家6 循環翻牌</div>
+    <div class="grid" id="board"></div>
+  </div>
+
+  <!-- 音效：你需要在 repo 根目錄放 sounds/flip.mp3、sounds/buzz.mp3 -->
+  <audio id="flipSound" src="sounds/flip.mp3" preload="auto"></audio>
+  <audio id="buzzSound" src="sounds/buzz.mp3" preload="auto"></audio>
+
+  <!-- 爆炸動畫層（主持人用） -->
+  <div id="winnerOverlay" style="
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,0.75);
+    z-index:9999;
+  ">
+    <div id="winnerOverlayText" style="
+      color:#fff;
+      font-size:72px;
+      font-weight:900;
+      text-align:center;
+      line-height:1.15;
+      transform:scale(0.3);
+      opacity:0;
+      padding:20px;
+      word-break:break-word;
+    ">搶到！</div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      doc, getDoc, updateDoc,
+      onSnapshot, collection,
+      runTransaction, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    // ======= 把這段換成你的 firebaseConfig（host.html / join.html / game.html 三份要一致） =======
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      appId: "YOUR_APP_ID",
+    };
+    // ============================================================================================
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // -------- URL params --------
+    const qs = new URLSearchParams(location.search);
+    const pin = qs.get("pin");
+    const playerId = qs.get("player");
+    const isHost = qs.get("host") === "1";
+    const secret = qs.get("secret");
+
+    if (!pin) {
+      document.body.innerHTML = "缺少 pin。請從 host.html 或 join.html 進入。";
+      throw new Error("missing pin");
+    }
+
+    // -------- DOM --------
+    const elPin = document.getElementById("pin");
+    const elRole = document.getElementById("role");
+    const elState = document.getElementById("state");
+    const elWinnerLine = document.getElementById("winnerTextLine");
+
+    const hostControls = document.getElementById("hostControls");
+    const playerControls = document.getElementById("playerControls");
+    const hostExtras = document.getElementById("hostExtras");
+
+    const btnFlip = document.getElementById("btnFlip");
+    const btnAuto = document.getElementById("btnAuto");
+    const btnPause = document.getElementById("btnPause");
+    const btnResetRound = document.getElementById("btnResetRound");
+    const btnBuzz = document.getElementById("btnBuzz");
+
+    const elPhotoStatus = document.getElementById("photoStatus");
+    const elBoard = document.getElementById("board");
+
+    const flipSound = document.getElementById("flipSound");
+    const buzzSound = document.getElementById("buzzSound");
+
+    const overlay = document.getElementById("winnerOverlay");
+    const overlayText = document.getElementById("winnerOverlayText");
+
+    const scoreBoard = document.getElementById("scoreBoard");
+    const joinUrlEl = document.getElementById("joinUrl");
+    const qrCanvas = document.getElementById("qrcode");
+
+    elPin.textContent = pin;
+    elRole.textContent = isHost ? "（主持人）" : "（玩家）";
+
+    hostControls.style.display = isHost ? "flex" : "none";
+    hostExtras.style.display = isHost ? "block" : "none";
+    playerControls.style.display = (!isHost && playerId) ? "flex" : "none";
+
+    const roomRef = doc(db, "rooms", pin);
+
+    // -------- Board rendering --------
+    const slots = Array.from({ length: 6 }, (_, i) => `玩家${i + 1}`);
+
+    function renderBoard(images) {
+      elBoard.innerHTML = slots.map((name, idx) => {
+        const src = images?.[idx] ?? null;
+        const label = src ? src.split("/").pop() : "";
+        return `
+          <div class="slot">
+            <div class="slotHead">
+              <div class="slotName">${name}</div>
+              <div class="slotMeta">${label}</div>
+            </div>
+            <div class="imgBox">
+              ${
+                src
+                  ? `<img src="${src}" alt="${name}"
+                      onerror="this.outerHTML='<div class=&quot;fallback&quot;>圖片載入失敗<br>${src}</div>'">`
+                  : `<div class="fallback">尚未翻牌</div>`
+              }
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    renderBoard(Array(6).fill(null));
+
+    // -------- QR code (host only) --------
+    const base = location.origin + location.pathname.replace(/\/[^/]*$/, "/");
+    const joinUrl = base + "join.html";
+    if (isHost) {
+      joinUrlEl.textContent = joinUrl;
+      try {
+        if (window.QRCode?.toCanvas) {
+          window.QRCode.toCanvas(qrCanvas, joinUrl, { width: 220 });
+        } else {
+          joinUrlEl.textContent = joinUrl + "（QRCode 套件載入失敗）";
+        }
+      } catch (e) {
+        console.error(e);
+        joinUrlEl.textContent = joinUrl + "（QRCode 產生失敗）";
+      }
+    }
+
+    // -------- Scoreboard (host only) --------
+    if (isHost) {
+      onSnapshot(collection(db, "rooms", pin, "scores"), (qs2) => {
+        const arr = [];
+        qs2.forEach(d => arr.push({ name: d.id, score: Number(d.data().value ?? 0) }));
+        arr.sort((a, b) => b.score - a.score);
+
+        scoreBoard.innerHTML = arr.length
+          ? arr.map(s => `<li><b>${escapeHtml(s.name)}</b>：${s.score}</li>`).join("")
+          : `<li class="muted">尚無得分</li>`;
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+
+    // -------- photos.json (host only, for dealing cards) --------
+    let photoList = [];
+
+    async function loadPhotos() {
+      try {
+        const r = await fetch("photos.json", { cache: "no-store" });
+        if (!r.ok) throw new Error("photos.json status " + r.status);
+        const data = await r.json();
+        if (!Array.isArray(data) || data.length === 0) throw new Error("photos.json empty");
+        photoList = data;
+        elPhotoStatus.textContent = `照片清單：已載入 ${photoList.length} 張`;
+      } catch (e) {
+        console.error(e);
+        elPhotoStatus.textContent = "照片清單：載入失敗（檢查 photos.json 路徑/大小寫）";
+      }
+    }
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // 同一輪（6 張）不重複；若你要「兩輪不重複」把 1 改 2（需至少 12 張照片）
+    const NO_REPEAT_ROUNDS = 1;
+
+    function makeDeck() {
+      const need = 6 * NO_REPEAT_ROUNDS;
+      if (photoList.length < need) {
+        throw new Error(`照片不足：需要至少 ${need} 張，現在只有 ${photoList.length} 張`);
+      }
+      return shuffle(photoList).slice(0, need);
+    }
+
+    // -------- Host auth helper --------
+    async function assertHost() {
+      const snap = await getDoc(roomRef);
+      if (!snap.exists()) throw new Error("room missing");
+      if (snap.data().hostSecret !== secret) throw new Error("host secret mismatch");
+      return snap.data();
+    }
+
+    // -------- Flip (host only): fixed order player1->player6 --------
+    async function hostFlip() {
+      if (!isHost) return;
+
+      btnFlip.disabled = true;
+      try {
+        await assertHost();
+        if (photoList.length === 0) throw new Error("photos.json not loaded");
+
+        await runTransaction(db, async (tx) => {
+          const s = await tx.get(roomRef);
+          if (!s.exists()) throw new Error("room missing");
+          const r = s.data();
+
+          const board = Array.isArray(r.boardImages) ? r.boardImages.slice(0, 6) : Array(6).fill(null);
+          let turnIndex = Number.isInteger(r.turnIndex) ? r.turnIndex : 0;
+          let deck = Array.isArray(r.deck) ? r.deck.slice() : [];
+
+          // 若牌堆用完，產生新的一輪牌堆（確保同一輪不重複）
+          if (deck.length === 0) {
+            deck = makeDeck();
+          }
+
+          const who = turnIndex;     // 0..5
+          const img = deck.pop();    // 本輪不重複
+          board[who] = img;
+
+          turnIndex = (turnIndex + 1) % 6;
+
+          // ✅ 翻牌 = 自動開放搶鈴（並重置 winner）
+          tx.update(roomRef, {
+            boardImages: board,
+            turnIndex,
+            deck,
+            lastFlip: { player: who, image: img },
+            lastFlipAt: serverTimestamp(),
+
+            buzzOpen: true,
+            buzzWinnerName: null,
+            buzzAt: null
+          });
+        });
+
+        // 翻牌音效（host only）
+        try { flipSound.currentTime = 0; await flipSound.play(); } catch {}
+      } catch (e) {
+        console.error(e);
+        alert("翻牌失敗：" + (e?.message ?? e));
+      } finally {
+        btnFlip.disabled = false;
+      }
+    }
+
+    // -------- Reset round (host only): clear board + new round number --------
+    async function resetRound() {
+      if (!isHost) return;
+      try {
+        const r = await assertHost();
+        await updateDoc(roomRef, {
+          boardImages: Array(6).fill(null),
+          turnIndex: 0,
+          deck: [],
+          round: (r.round ?? 1) + 1,
+
+          buzzOpen: false,
+          buzzWinnerName: null,
+          buzzAt: null
+        });
+      } catch (e) {
+        console.error(e);
+        alert("下一輪失敗：" + (e?.message ?? e));
+      }
+    }
+
+    // -------- Auto play (host only) --------
+    const AUTO_INTERVAL_MS = 800;
+    let autoTimer = null;
+    let isAutoRunning = false;
+
+    function setAutoUI() {
+      if (!isHost) return;
+      btnAuto.disabled = isAutoRunning;
+      btnPause.disabled = !isAutoRunning;
+      btnAuto.textContent = isAutoRunning ? "自動播放中…" : "開始自動播放";
+    }
+
+    async function startAuto() {
+      if (!isHost || isAutoRunning) return;
+      if (photoList.length === 0) {
+        alert("photos.json 尚未載入成功，請確認 https://fferwfe.github.io/-2/photos.json 可打開。");
+        return;
+      }
+      isAutoRunning = true;
+      setAutoUI();
+
+      await hostFlip();
+
+      autoTimer = setInterval(async () => {
+        if (btnFlip.disabled) return; // 避免重入
+        await hostFlip();
+      }, AUTO_INTERVAL_MS);
+    }
+
+    function stopAuto() {
+      if (!isHost || !isAutoRunning) return;
+      isAutoRunning = false;
+      if (autoTimer) {
+        clearInterval(autoTimer);
+        autoTimer = null;
+      }
+      setAutoUI();
+    }
+
+    function toggleAuto() {
+      if (isAutoRunning) stopAuto();
+      else startAuto();
+    }
+
+    // -------- Player buzz (mobile only): first wins + score +1 --------
+    btnBuzz?.addEventListener("click", async () => {
+      if (!playerId) {
+        alert("缺少 playerId，請從 join.html 加入後再進來。");
+        return;
+      }
+      btnBuzz.disabled = true;
+
+      const playerRef = doc(db, "rooms", pin, "players", playerId);
+
+      try {
+        await runTransaction(db, async (tx) => {
+          const roomSnap = await tx.get(roomRef);
+          if (!roomSnap.exists()) throw new Error("room missing");
+          const r = roomSnap.data();
+
+          if (!r.buzzOpen) return;
+          if (r.buzzWinnerName) return;
+
+          const pSnap = await tx.get(playerRef);
+          if (!pSnap.exists()) throw new Error("player missing");
+          const p = pSnap.data();
+          const name = String(p.name ?? "").trim();
+          if (!name) throw new Error("player name missing");
+
+          // winner
+          tx.update(roomRef, {
+            buzzOpen: false,
+            buzzWinnerName: name,
+            buzzAt: serverTimestamp()
+          });
+
+          // score +1
+          const scoreRef = doc(db, "rooms", pin, "scores", name);
+          const scoreSnap = await tx.get(scoreRef);
+          const current = scoreSnap.exists() ? Number(scoreSnap.data().value ?? 0) : 0;
+          tx.set(scoreRef, { value: current + 1 }, { merge: true });
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    });
+
+    // -------- Winner overlay + buzz sound (host only overlay, sound on all optional) --------
+    let lastWinnerSeen = null;
+
+    function showWinnerOverlay(name) {
+      overlayText.innerHTML = `🔔<br>${escapeHtml(name)}<br>搶到！`;
+      overlay.style.display = "flex";
+
+      overlay.classList.remove("winner-show");
+      overlayText.classList.remove("winner-text-show");
+      void overlay.offsetWidth;
+
+      overlay.classList.add("winner-show");
+      overlayText.classList.add("winner-text-show");
+
+      setTimeout(() => { overlay.style.display = "none"; }, 1500);
+    }
+
+    async function playBuzzSound() {
+      try { buzzSound.currentTime = 0; await buzzSound.play(); } catch {}
+    }
+
+    // -------- Room live sync --------
+    onSnapshot(roomRef, (snap) => {
+      if (!snap.exists()) {
+        elState.textContent = "房間不存在或已刪除。";
+        return;
+      }
+      const r = snap.data();
+
+      const round = r.round ?? 1;
+      const buzz = r.buzzOpen ? "開放" : "關閉";
+      const next = Number.isInteger(r.turnIndex) ? (r.turnIndex + 1) : 1;
+
+      elState.textContent = `第 ${round} 輪｜搶鈴：${buzz}｜下一位翻牌：玩家${next}`;
+
+      // render board
+      renderBoard(r.boardImages);
+
+      // player button state
+      if (!isHost && btnBuzz) {
+        btnBuzz.disabled = !r.buzzOpen || !!r.buzzWinnerName;
+      }
+
+      // winner display
+      if (r.buzzWinnerName) {
+        elWinnerLine.textContent = `搶到的是：${r.buzzWinnerName}`;
+
+        // only trigger once per new winner
+        if (r.buzzWinnerName !== lastWinnerSeen) {
+          lastWinnerSeen = r.buzzWinnerName;
+
+          // sound (all clients). 若你只想主持人有聲，把 if(isHost) 包住即可
+          playBuzzSound();
+
+          // overlay (host only)
+          if (isHost) showWinnerOverlay(r.buzzWinnerName);
+        }
+      } else {
+        elWinnerLine.textContent = "搶鈴：尚未有人搶到";
+        lastWinnerSeen = null;
+      }
+    });
+
+    // -------- Host UI events + hotkeys --------
+    btnFlip?.addEventListener("click", hostFlip);
+    btnResetRound?.addEventListener("click", resetRound);
+
+    btnAuto?.addEventListener("click", startAuto);
+    btnPause?.addEventListener("click", stopAuto);
+
+    document.addEventListener("keydown", async (e) => {
+      if (!isHost) return;
+
+      const tag = (e.target?.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || e.target?.isContentEditable) return;
+
+      if (e.code === "Space") {
+        e.preventDefault();
+        toggleAuto();
+      } else if (e.key === "n" || e.key === "N") {
+        e.preventDefault();
+        await hostFlip();
+      }
+    });
+
+    // -------- Init (host only) --------
+    if (isHost) {
+      setAutoUI();
+      await loadPhotos();
+
+      // 若第一次進入尚未初始化 boardImages，主持人補初始化一次（不影響既有）
+      try {
+        const r = await assertHost();
+        if (!Array.isArray(r.boardImages)) {
+          await updateDoc(roomRef, {
+            boardImages: Array(6).fill(null),
+            turnIndex: 0,
+            deck: []
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  </script>
+</body>
+</html>
