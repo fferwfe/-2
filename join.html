@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>德國心臟病｜加入</title>
+  <style>
+    :root{--bg:#061427;--text:#eaf2ff;--muted:#9bb3d6;--card:rgba(255,255,255,.06);--bd:rgba(255,255,255,.12);}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#040b16,#061427 50%, #030812);
+      color:var(--text);font-family:system-ui,-apple-system,"Noto Sans TC",Segoe UI,Roboto,Arial}
+    .card{width:min(520px,92vw);background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:18px}
+    h1{margin:0 0 6px;font-size:26px}
+    p{margin:0 0 14px;color:var(--muted)}
+    label{font-size:13px;color:var(--muted)}
+    input{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.2);color:var(--text)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    button{width:100%;margin-top:12px;padding:12px;border-radius:12px;border:1px solid rgba(70,120,255,.45);
+      background:rgba(70,120,255,.25);color:var(--text);font-weight:800;cursor:pointer}
+    .ok{border-color:rgba(50,213,131,.45);background:rgba(50,213,131,.18)}
+    .msg{margin-top:10px;font-size:13px;color:var(--muted);white-space:pre-wrap}
+    .small{font-size:12px;color:var(--muted);margin-top:10px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>加入遊戲</h1>
+    <p>輸入 PIN 與你的名字（自由命名），加入後會等待主持人開始。</p>
+
+    <div class="row">
+      <div>
+        <label>PIN</label><br>
+        <input id="pin" placeholder="例如：123456" inputmode="numeric">
+      </div>
+      <div>
+        <label>名字</label><br>
+        <input id="name" placeholder="例如：第一組 / 阿明 / 你想要的名稱">
+      </div>
+    </div>
+
+    <button id="btnJoin">加入</button>
+    <button id="btnGo" class="ok" style="display:none;">前往搶答畫面</button>
+    <div class="msg" id="msg"></div>
+    <div class="small">提示：加入成功後，你手機只會顯示「搶答」；主持人負責發牌與判定。</div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, serverTimestamp, onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCmbM5JgUphfWil3ImVi7GFtVrfeE7jzm4",
+    authDomain: "fr44-31112.firebaseapp.com",
+    projectId: "fr44-31112",
+    storageBucket: "fr44-31112.firebasestorage.app",
+    messagingSenderId: "399575656230",
+    appId: "1:399575656230:web:e9bbdc7cc1d242a216c3e7",
+    measurementId: "G-PELSKZC7JF"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const $ = (id)=>document.getElementById(id);
+  const baseUrl = new URL('.', location.href);
+  const abs = (p)=>new URL(p, baseUrl).toString();
+
+  const qs = new URLSearchParams(location.search);
+  const urlPin = qs.get('pin');
+  if (urlPin) $('pin').value = urlPin;
+
+  let playerId = localStorage.getItem('heart_playerId') || crypto.randomUUID();
+  localStorage.setItem('heart_playerId', playerId);
+
+  function setMsg(t){ $('msg').textContent = t; }
+
+  async function joinRoom() {
+    const pin = $('pin').value.trim();
+    const name = $('name').value.trim();
+    if (!/^\d{6}$/.test(pin)) return setMsg('PIN 必須是 6 位數');
+    if (!name) return setMsg('請輸入名字');
+
+    const roomRef = doc(db,'rooms',pin);
+    const roomSnap = await getDoc(roomRef);
+    if (!roomSnap.exists()) return setMsg('找不到房間，請確認 PIN');
+
+    const playerRef = doc(db,'rooms',pin,'players',playerId);
+    await setDoc(playerRef, {
+      name,
+      state: 'joined',
+      joinedAt: serverTimestamp()
+    }, { merge: true });
+
+    setMsg(`加入成功：${name}\n等待主持人開始…`);
+    $('btnGo').style.display = 'block';
+
+    // 一旦主持人開始（status=playing），自動跳轉到 game.html
+    onSnapshot(roomRef, (snap)=>{
+      const status = snap.data()?.status;
+      if (status === 'playing') {
+        location.href = abs(`game.html?pin=${pin}&pid=${playerId}`);
+      }
+    });
+  }
+
+  $('btnJoin').onclick = joinRoom;
+  $('btnGo').onclick = ()=>{
+    const pin = $('pin').value.trim();
+    if (!/^\d{6}$/.test(pin)) return setMsg('請先輸入正確 PIN');
+    location.href = abs(`game.html?pin=${pin}&pid=${playerId}`);
+  };
+</script>
+</body>
+</html>
+

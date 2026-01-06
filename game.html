@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>德國心臟病｜搶答</title>
+  <style>
+    :root{--bg:#061427;--text:#eaf2ff;--muted:#9bb3d6;--bd:rgba(255,255,255,.12);}
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#040b16,#061427 40%, #030812);color:var(--text);
+      font-family:system-ui,-apple-system,"Noto Sans TC",Segoe UI,Roboto,Arial}
+    header{position:sticky;top:0;z-index:10;background:rgba(3,8,18,.75);backdrop-filter: blur(10px);border-bottom:1px solid rgba(255,255,255,.07);}
+    .wrap{max-width:1200px;margin:0 auto;padding:14px 16px;}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+    .btn{appearance:none;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--text);
+      padding:10px 12px;border-radius:12px;font-weight:800;cursor:pointer}
+    .buzz{font-size:22px;padding:16px 18px;border-radius:16px;border:1px solid rgba(255,107,107,.55);background:rgba(255,107,107,.20)}
+    .buzz:disabled{opacity:.55;cursor:not-allowed}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+    @media (max-width: 980px){.grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width: 560px){.grid{grid-template-columns:1fr}}
+    .panel{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:12px;min-height:220px}
+    .panel h3{margin:0 0 8px}
+    .imgbox{height:180px;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.25);
+      display:flex;align-items:center;justify-content:center;overflow:hidden}
+    img{width:100%;height:100%;object-fit:cover;display:block}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap row">
+    <div class="row" style="gap:8px;">
+      <span class="pill">PIN：<b id="pin">----</b></span>
+      <span class="pill">狀態：<b id="status">---</b></span>
+      <span class="pill">你的名字：<b id="me">---</b></span>
+      <span class="pill">第 <b id="round">0</b> 輪</span>
+    </div>
+    <button class="btn buzz" id="btnBuzz">搶答（手機按這個）</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="muted" id="msg">等待主持人發牌…</div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getFirestore, doc, getDoc, onSnapshot, collection, addDoc, serverTimestamp, updateDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCmbM5JgUphfWil3ImVi7GFtVrfeE7jzm4",
+    authDomain: "fr44-31112.firebaseapp.com",
+    projectId: "fr44-31112",
+    storageBucket: "fr44-31112.firebasestorage.app",
+    messagingSenderId: "399575656230",
+    appId: "1:399575656230:web:e9bbdc7cc1d242a216c3e7",
+    measurementId: "G-PELSKZC7JF"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const $ = (id)=>document.getElementById(id);
+  const baseUrl = new URL('.', location.href);
+  const abs = (p)=>new URL(p, baseUrl).toString();
+
+  const qs = new URLSearchParams(location.search);
+  const pin = qs.get('pin');
+  const pid = qs.get('pid') || localStorage.getItem('heart_playerId') || crypto.randomUUID();
+  localStorage.setItem('heart_playerId', pid);
+
+  $('pin').textContent = pin || '----';
+
+  if (!pin) {
+    $('msg').textContent = '缺少 pin，請從 join.html 進入';
+    $('btnBuzz').disabled = true;
+    throw new Error('Missing pin');
+  }
+
+  const roomRef = doc(db,'rooms',pin);
+  const meRef = doc(db,'rooms',pin,'players',pid);
+
+  async function loadMe() {
+    const s = await getDoc(meRef);
+    const name = s.data()?.name || '未命名';
+    $('me').textContent = name;
+    return name;
+  }
+  let myName = await loadMe();
+
+  function renderDealt(dealt) {
+    const box = $('grid');
+    box.innerHTML = '';
+    for (const d of dealt) {
+      const div = document.createElement('div');
+      div.className = 'panel';
+      div.innerHTML = `
+        <h3>玩家${d.seat}</h3>
+        <div class="imgbox">
+          <img src="${abs(d.photo)}" alt="seat ${d.seat}">
+        </div>
+        <div class="muted" style="margin-top:8px;">${d.photo.split('/').pop()}</div>
+      `;
+      box.appendChild(div);
+    }
+  }
+
+  // 訂閱房間：狀態、回合、發牌、搶答鎖定
+  onSnapshot(roomRef, (snap)=>{
+    if (!snap.exists()) return;
+    const room = snap.data();
+    $('status').textContent =
+      room.status === 'lobby' ? '等待' :
+      room.status === 'playing' ? '進行中' :
+      room.status === 'paused' ? '暫停' : (room.status||'未知');
+
+    $('round').textContent = String(room.round ?? 0);
+
+    const history = room.history || [];
+    const last = history[history.length-1];
+    if (!last) {
+      $('msg').textContent = '等待主持人發牌…';
+      $('grid').innerHTML = '';
+    } else {
+      $('msg').textContent = `目前第 ${last.round} 輪。回合內照片不重複；跨回合是否重複由主持人設定。`;
+      renderDealt(last.dealt || []);
+    }
+
+    const buzz = room.buzz || {};
+    $('btnBuzz').disabled = !!buzz.locked || room.status !== 'playing';
+  });
+
+  // 按搶答：第一個按到的人會鎖定（主持人畫面顯示）
+  $('btnBuzz').onclick = async ()=>{
+    const roomSnap = await getDoc(roomRef);
+    const room = roomSnap.data();
+    if (room?.buzz?.locked) return;
+
+    // 先寫一筆事件（用 serverTimestamp 排序）
+    await addDoc(collection(db,'rooms',pin,'buzzEvents'), {
+      pid,
+      name: myName,
+      ts: serverTimestamp()
+    });
+
+    // 再嘗試鎖定 winner（簡化版：先到先鎖）
+    // 若多人同時按，後寫的人會被 locked 擋住（足夠給你的玩法）
+    const now = new Date().toLocaleTimeString();
+    await updateDoc(roomRef, {
+      buzz: {
+        locked: true,
+        winnerId: pid,
+        winnerName: myName,
+        at: now
+      }
+    });
+  };
+</script>
+</body>
+</html>
+
+
