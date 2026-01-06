@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>搶答｜德國心臟病</title>
+  <style>
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(180deg,#040b16,#061427 50%, #030812);color:#eaf2ff;
+      font-family:system-ui,-apple-system,"Noto Sans TC","Microsoft JhengHei",Segoe UI,Roboto,Arial}
+    .card{width:min(520px,92vw);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;padding:18px;text-align:center}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;
+      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
+    .pill b{font-size:18px}
+    .muted{color:#9bb3d6}
+    .buzz{width:100%;margin-top:16px;padding:18px;border-radius:16px;border:1px solid rgba(255,107,107,.55);
+      background:rgba(255,107,107,.20);color:#eaf2ff;font-weight:1000;font-size:22px;cursor:pointer}
+    .buzz:disabled{opacity:.55;cursor:not-allowed}
+    .msg{margin-top:12px;color:#9bb3d6;white-space:pre-wrap}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="pill">PIN：<b id="pin">----</b></div>
+    <h1 style="margin:14px 0 6px;">手機搶答</h1>
+    <div class="muted">你只能搶，發牌由主持人控制。</div>
+
+    <button class="buzz" id="btnBuzz">搶答</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCmbM5JgUphfWil3ImVi7GFtVrfeE7jzm4",
+      authDomain: "fr44-31112.firebaseapp.com",
+      databaseURL: "https://fr44-31112-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "fr44-31112",
+      storageBucket: "fr44-31112.appspot.com",
+      messagingSenderId: "399575656230",
+      appId: "1:399575656230:web:e9bbdc7cc1d242a216c3e7"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const $ = (id)=>document.getElementById(id);
+    const qs = new URLSearchParams(location.search);
+    const pin = qs.get('pin') || localStorage.getItem('heart_pin');
+    const pid = qs.get('pid') || localStorage.getItem('heart_pid');
+    const name = localStorage.getItem('heart_name') || '未命名';
+
+    $('pin').textContent = pin || '----';
+    if(!pin || !pid){
+      $('msg').textContent = '缺少 pin/pid，請從 join.html 加入';
+      $('btnBuzz').disabled = true;
+      throw new Error('Missing pin/pid');
+    }
+
+    const roomRef = db.ref(`rooms/${pin}`);
+
+    // 狀態同步：paused / playing、以及 buzz lock
+    roomRef.on('value', (snap)=>{
+      const room = snap.val();
+      if(!room) return;
+      const status = room.status || 'lobby';
+      const locked = !!(room.buzz && room.buzz.locked);
+
+      if(status !== 'playing'){
+        $('btnBuzz').disabled = true;
+        $('msg').textContent = (status==='paused') ? '目前暫停中' : '等待主持人開始';
+        return;
+      }
+      if(locked){
+        $('btnBuzz').disabled = true;
+        $('msg').textContent = `已有人先搶到：${room.buzz.winnerName||''}`;
+        return;
+      }
+      $('btnBuzz').disabled = false;
+      $('msg').textContent = '可以搶！';
+    });
+
+    $('btnBuzz').onclick = async ()=>{
+      $('btnBuzz').disabled = true;
+
+      const now = new Date().toLocaleTimeString();
+
+      // 先寫事件（不影響勝負，只做紀錄）
+      await db.ref(`rooms/${pin}/buzzEvents`).push({
+        pid, name, ts: Date.now()
+      });
+
+      // 用 transaction 鎖定 winner（先到先贏）
+      await db.ref(`rooms/${pin}/buzz`).transaction((cur)=>{
+        if(cur && cur.locked) return; // 已鎖定，不覆寫
+        return { locked:true, winnerId:pid, winnerName:name, at: now };
+      });
+
+      // 等待房間回傳狀態
+      $('msg').textContent = '已送出搶答，等待主持人判定…';
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>加入｜德國心臟病</title>
+  <style>
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(180deg,#040b16,#061427 50%, #030812);color:#eaf2ff;
+      font-family:system-ui,-apple-system,"Noto Sans TC","Microsoft JhengHei",Segoe UI,Roboto,Arial}
+    .card{width:min(560px,92vw);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;padding:18px}
+    h1{margin:0 0 6px}
+    .muted{color:#9bb3d6}
+    label{font-size:13px;color:#9bb3d6}
+    input{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);
+      background:rgba(0,0,0,.22);color:#eaf2ff;font-size:16px;margin:8px 0}
+    button{width:100%;padding:12px;border-radius:12px;border:0;background:rgba(70,120,255,.35);color:#eaf2ff;
+      font-weight:900;font-size:16px;cursor:pointer}
+    .err{margin-top:10px;color:#ff9aa2;font-weight:900;white-space:pre-wrap}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>加入遊戲</h1>
+    <div class="muted">輸入 PIN 與名字（自由命名），加入後手機只負責「搶」。</div>
+
+    <label>PIN（6碼）</label>
+    <input id="pin" placeholder="例如 123456" inputmode="numeric" />
+
+    <label>名字（自由命名）</label>
+    <input id="name" placeholder="例如 第一組 / 紅隊 / 阿明" maxlength="20" />
+
+    <button id="btnJoin">加入</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCmbM5JgUphfWil3ImVi7GFtVrfeE7jzm4",
+      authDomain: "fr44-31112.firebaseapp.com",
+      databaseURL: "https://fr44-31112-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "fr44-31112",
+      storageBucket: "fr44-31112.appspot.com",
+      messagingSenderId: "399575656230",
+      appId: "1:399575656230:web:e9bbdc7cc1d242a216c3e7"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const $ = (id)=>document.getElementById(id);
+    const baseUrl = new URL('.', location.href);
+    const abs = (p)=>new URL(p, baseUrl).toString();
+
+    // 支援從 host 分享的 #pin= 直接帶入
+    const hash = new URLSearchParams(location.hash.replace(/^#/,''));
+    const hpin = hash.get('pin');
+    if(hpin) $('pin').value = hpin;
+
+    $('btnJoin').onclick = async ()=>{
+      $('err').textContent = '';
+      const pin = ($('pin').value||'').trim();
+      const name = ($('name').value||'').trim();
+
+      if(!/^\d{6}$/.test(pin)) return $('err').textContent = 'PIN 必須是 6 碼數字';
+      if(!name) return $('err').textContent = '請輸入名字（自由命名）';
+
+      const roomSnap = await db.ref(`rooms/${pin}`).get();
+      if(!roomSnap.exists()) return $('err').textContent = '找不到房間，請確認主持人已建立房間';
+
+      // 建立玩家ID
+      const playerRef = db.ref(`rooms/${pin}/players`).push();
+      const pid = playerRef.key;
+
+      await playerRef.set({ name, joinedAt: Date.now() });
+
+      localStorage.setItem('heart_pin', pin);
+      localStorage.setItem('heart_pid', pid);
+      localStorage.setItem('heart_name', name);
+
+      location.href = abs(`guest.html?pin=${encodeURIComponent(pin)}&pid=${encodeURIComponent(pid)}`);
+    };
+  </script>
+</body>
+</html>
+
+
