@@ -1,17 +1,9 @@
 <!doctype html>
 <html lang="zh-Hant">
-<head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>搶答器</title>
-  <style>
-    body{background:#061427;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0}
-    #btnBuzz{width:250px;height:250px;border-radius:50%;border:8px solid #fff;background:#ff6b6b;font-size:40px;font-weight:bold;color:#fff;cursor:pointer}
-    #btnBuzz:disabled{background:#444;opacity:0.5}
-  </style>
-</head>
-<body>
-  <div id="msg" style="margin-bottom:20px">等待中...</div>
-  <button id="btnBuzz" disabled>搶！</button>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>搶答器</title></head>
+<body style="background:#061427;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0">
+  <div id="status" style="margin-bottom:20px">準備...</div>
+  <button id="btnBuzz" disabled style="width:200px;height:200px;border-radius:50%;border:5px solid #fff;background:#ff6b6b;color:#fff;font-size:40px;font-weight:bold">搶！</button>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script>
@@ -26,15 +18,13 @@
     const qs = new URLSearchParams(location.search);
     const pin = qs.get('pin');
     const name = qs.get('name');
-
     db.ref(`rooms/${pin}`).on('value', snap => {
       const room = snap.val();
-      const locked = !!room.buzz?.locked;
-      document.getElementById('btnBuzz').disabled = locked;
-      document.getElementById('msg').textContent = locked ? `勝者：${room.buzz.winnerName}` : '可以搶！';
+      const locked = room?.buzz?.locked;
+      document.getElementById('btnBuzz').disabled = !!locked;
+      document.getElementById('status').textContent = locked ? `勝者：${room.buzz.winnerName}` : "可以搶！";
     });
-
-    document.getElementById('btnBuzz').onclick = ()=>{
+    document.getElementById('btnBuzz').onclick = () => {
       db.ref(`rooms/${pin}/buzz`).transaction(cur => {
         if(cur && cur.locked) return;
         return {locked:true, winnerName:name, at:new Date().toLocaleTimeString()};
@@ -43,4 +33,3 @@
   </script>
 </body>
 </html>
-
