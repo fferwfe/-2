@@ -1,124 +1,45 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>牌桌｜德國心臟病</title>
+  <meta charset="utf-8" /><title>大螢幕</title>
   <style>
-    :root{--bg:#061427;--text:#eaf2ff;--muted:#9bb3d6;--bd:rgba(255,255,255,.12)}
-    *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#040b16,#061427 45%, #030812);color:var(--text);
-      font-family:system-ui,-apple-system,"Noto Sans TC","Microsoft JhengHei",Segoe UI,Roboto,Arial}
-    header{position:sticky;top:0;z-index:10;background:rgba(3,8,18,.78);backdrop-filter: blur(10px);
-      border-bottom:1px solid rgba(255,255,255,.07);}
-    .wrap{max-width:1200px;margin:0 auto;padding:14px 16px;}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;
-      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
-    .pill b{font-size:18px}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
-    @media (max-width: 980px){.grid{grid-template-columns:repeat(2,1fr)}}
-    @media (max-width: 560px){.grid{grid-template-columns:1fr}}
-    .seat{background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:12px}
-    .seat h3{margin:0 0 8px}
-    .imgbox{height:260px;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.25);
-      display:flex;align-items:center;justify-content:center;overflow:hidden}
-    img{width:100%;height:100%;object-fit:cover;display:block;animation:flipIn .25s ease}
-    .muted{color:var(--muted)}
-    @keyframes flipIn{
-      from{transform:scale(.98);opacity:.4}
-      to{transform:scale(1);opacity:1}
-    }
+    body{background:#040b16;color:#fff;text-align:center;font-family:sans-serif}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:20px;max-width:1000px;margin:0 auto}
+    .box{height:250px;background:rgba(255,255,255,0.05);border-radius:15px;overflow:hidden}
+    img{width:100%;height:100%;object-fit:cover}
+    #win{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:120px;color:#32d583;display:none;font-weight:900}
   </style>
 </head>
 <body>
-<header>
-  <div class="wrap row">
-    <div class="row" style="gap:8px;">
-      <span class="pill">PIN：<b id="pin">----</b></span>
-      <span class="pill">狀態：<b id="status">---</b></span>
-      <span class="pill">第 <b id="round">0</b> 輪</span>
-    </div>
-    <div class="muted" id="msg">等待主持人發牌…</div>
-  </div>
-</header>
-
-<div class="wrap">
+  <h1>房間: <span id="ps">----</span> | 第 <span id="rs">0</span> 輪</h1>
   <div class="grid" id="grid"></div>
-</div>
+  <div id="win"></div>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCmbM5JgUphfWil3ImVi7GFtVrfeE7jzm4",
+      authDomain: "fe55-dbd87.firebaseapp.com",
+      databaseURL: "https://fe55-dbd87-default-rtdb.firebaseio.com",
+      projectId: "fe55-dbd87"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const pin = new URLSearchParams(location.search).get('pin');
+    document.getElementById('ps').textContent = pin;
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCmbM5JgUphfWil3ImVi7GFtVrfeE7jzm4",
-    authDomain: "fr44-31112.firebaseapp.com",
-    databaseURL: "https://fr44-31112-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "fr44-31112",
-    storageBucket: "fr44-31112.appspot.com",
-    messagingSenderId: "399575656230",
-    appId: "1:399575656230:web:e9bbdc7cc1d242a216c3e7"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-  const $ = (id)=>document.getElementById(id);
-  const baseUrl = new URL('.', location.href);
-  const abs = (p)=>new URL(p, baseUrl).toString();
-
-  const qs = new URLSearchParams(location.search);
-  const pin = qs.get('pin');
-  $('pin').textContent = pin || '----';
-
-  if(!pin){
-    $('msg').textContent = '缺少 pin，請從 host.html 開啟連結';
-    throw new Error('Missing pin');
-  }
-
-  const roomRef = db.ref(`rooms/${pin}`);
-  roomRef.on('value', (snap)=>{
-    const room = snap.val();
-    if(!room) return;
-
-    $('status').textContent =
-      room.status === 'lobby' ? '等待加入' :
-      room.status === 'playing' ? '進行中' :
-      room.status === 'paused' ? '暫停' : (room.status||'未知');
-
-    $('round').textContent = String(room.round||0);
-
-    const history = Array.isArray(room.history) ? room.history : [];
-    const last = history[history.length-1];
-    if(!last){
-      $('msg').textContent = '等待主持人發牌…';
-      $('grid').innerHTML = '';
-      return;
-    }
-
-    $('msg').textContent = `目前第 ${last.round} 輪`;
-    render(last.dealt || []);
-  });
-
-  function render(dealt){
-    const grid = $('grid');
-    grid.innerHTML='';
-    for(const d of dealt){
-      const div=document.createElement('div');
-      div.className='seat';
-      div.innerHTML = `
-        <h3>玩家${d.seat}</h3>
-        <div class="imgbox">
-          <img src="${abs(d.photo)}" alt="玩家${d.seat}"
-               onerror="this.style.display='none'; this.parentElement.textContent='載入失敗：${d.photo}';">
-        </div>
-        <div class="muted" style="margin-top:8px;">${(d.photo||'').split('/').pop()}</div>
-      `;
-      grid.appendChild(div);
-    }
-  }
-</script>
+    db.ref(`rooms/${pin}`).on('value', snap => {
+      const room = snap.val(); if(!room) return;
+      document.getElementById('rs').textContent = room.round;
+      const grid = document.getElementById('grid'); grid.innerHTML = '';
+      const last = room.history ? room.history[room.history.length-1] : null;
+      if(last) last.dealt.forEach(d => {
+        grid.innerHTML += `<div class="box"><img src="${d.photo}"></div>`;
+      });
+      const win = document.getElementById('win');
+      if(room.buzz?.locked){ win.textContent = room.buzz.winnerName; win.style.display = 'block'; }
+      else { win.style.display = 'none'; }
+    });
+  </script>
 </body>
 </html>
-
-
-
