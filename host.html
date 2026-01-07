@@ -1,130 +1,79 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>主持人｜德國心臟病</title>
   <style>
-    :root{ --bg:#061427; --text:#eaf2ff; --muted:#9bb3d6; --bd:rgba(255,255,255,.12); --card:rgba(255,255,255,.06); --good:#32d583; --warn:#ffd166; --bad:#ff6b6b; }
-    *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#040b16,#061427 45%, #030812);color:var(--text); font-family:system-ui,-apple-system,sans-serif;}
-    header{position:sticky;top:0;z-index:10;background:rgba(3,8,18,.78);backdrop-filter: blur(10px); border-bottom:1px solid rgba(255,255,255,.07);}
-    .wrap{max-width:1200px;margin:0 auto;padding:14px 16px;}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px; background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
-    .btn{appearance:none;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--text); padding:10px 12px;border-radius:12px;font-weight:800;cursor:pointer}
-    .btn.primary{background:rgba(70,120,255,.25);border-color:rgba(70,120,255,.45)}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
-    .card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:14px}
-    .log{max-height:200px;overflow:auto;background:rgba(0,0,0,0.2);padding:10px;border-radius:10px;font-size:12px}
+    :root{ --bg:#061427; --text:#eaf2ff; --muted:#9bb3d6; --bd:rgba(255,255,255,.12); --card:rgba(255,255,255,.06); --good:#32d583; --warn:#ffd166; }
+    body{margin:0;background:linear-gradient(180deg,#040b16,#061427);color:var(--text);font-family:sans-serif;}
+    .wrap{max-width:1000px;margin:0 auto;padding:20px;}
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:20px;margin-bottom:20px}
+    .btn{padding:10px 20px;border-radius:10px;border:none;background:#32d583;font-weight:bold;cursor:pointer}
     .tableGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
     .imgbox{height:150px;background:rgba(0,0,0,0.3);border-radius:10px;overflow:hidden}
     img{width:100%;height:100%;object-fit:cover}
   </style>
 </head>
 <body>
-<header>
-  <div class="wrap row">
-    <div style="font-weight:900">德國心臟病｜主持人</div>
-    <div class="row">
-      <span class="pill">PIN：<b id="pin">----</b></span>
-      <button class="btn primary" id="btnCreate">建立房間</button>
-      <button class="btn" id="btnNext" disabled>下一輪 (N)</button>
-      <button class="btn" id="btnResetBuzz" disabled>清除搶答</button>
-    </div>
-  </div>
-</header>
 <div class="wrap">
-  <div class="grid">
-    <div class="card">
-      <h3>房間狀態</h3>
-      <div id="status">未連線</div>
-      <div class="muted">加入連結：<a id="joinUrl" target="_blank" style="color:#9cc3ff">--</a></div>
-    </div>
-    <div class="card">
-      <h3>搶答紀錄</h3>
-      <div id="buzzInfo" style="color:var(--good);font-weight:bold">等待中...</div>
-      <div class="log" id="buzzLog"></div>
-    </div>
+  <div class="card">
+    <h2>主持人控制台</h2>
+    <button class="btn" id="btnCreate">建立房間</button>
+    <button class="btn" id="btnNext" disabled style="background:#4678ff;color:white">下一輪 (N)</button>
+    <button class="btn" id="btnReset" disabled style="background:#666">重設搶答</button>
+    <p>PIN: <b id="pin">----</b> | 狀態: <span id="status">未連線</span></p>
+    <p>網址: <a id="joinUrl" target="_blank" style="color:#9cc3ff">--</a></p>
   </div>
-  <div class="card" style="margin-top:14px">
-    <h3>目前牌面 (第 <span id="roundNum">0</span> 輪)</h3>
+  <div class="card">
+    <h3>搶答：<span id="winner" style="color:var(--good)">等待中</span></h3>
     <div class="tableGrid" id="tableGrid"></div>
   </div>
 </div>
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyCmbM5JgUphfWil3ImVi7GFtVrfeE7jzm4",
     authDomain: "fe55-dbd87.firebaseapp.com",
-    databaseURL:"https://fe55-dbd87-default-rtdb.asia-southeast1.firebasedatabase.app",
+    databaseURL: "https://fe55-dbd87-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "fe55-dbd87",
     storageBucket: "fe55-dbd87.appspot.com",
     appId: "1:399575656230:web:e9bbdc7cc1d242a216c3e7"
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
-  const $ = (id)=>document.getElementById(id);
-  let curPin = null;
+  let pin = null;
 
-  async function loadPhotos(){
-    try {
-      const r = await fetch('photos.json');
-      return await r.json();
-    } catch(e) {
-      return Array.from({length:10}, (_,i)=>`https://picsum.photos/400/600?sig=${i}`);
-    }
-  }
-
-  $('btnCreate').onclick = async ()=>{
-    const photos = await loadPhotos();
-    curPin = String(Math.floor(100000 + Math.random()*900000));
-    await db.ref(`rooms/${curPin}`).set({
-      status: 'playing', round: 0, photos, history: [], buzz: {locked:false}
+  document.getElementById('btnCreate').onclick = async () => {
+    pin = String(Math.floor(100000 + Math.random()*900000));
+    await db.ref(`rooms/${pin}`).set({
+      status: 'playing', round: 0, buzz: {locked:false}, history: []
     });
-    $('pin').textContent = curPin;
-    $('joinUrl').textContent = new URL(`join.html#pin=${curPin}`, location.href);
-    $('joinUrl').href = `join.html#pin=${curPin}`;
-    $('btnNext').disabled = $('btnResetBuzz').disabled = false;
-    subscribe();
-  };
-
-  function subscribe(){
-    db.ref(`rooms/${curPin}`).on('value', snap => {
+    document.getElementById('pin').textContent = pin;
+    document.getElementById('joinUrl').href = `join.html#pin=${pin}`;
+    document.getElementById('joinUrl').textContent = `join.html#pin=${pin}`;
+    document.getElementById('btnNext').disabled = document.getElementById('btnReset').disabled = false;
+    db.ref(`rooms/${pin}`).on('value', snap => {
       const room = snap.val();
-      if(!room) return;
-      $('status').textContent = "遊戲進行中";
-      $('roundNum').textContent = room.round;
-      if(room.buzz?.locked){
-        $('buzzInfo').textContent = "勝者：" + room.buzz.winnerName;
-        $('buzzLog').innerHTML += `<div>[${room.buzz.at}] ${room.buzz.winnerName} 搶答</div>`;
-      } else { $('buzzInfo').textContent = "可以搶答"; }
-      renderTable(room);
+      document.getElementById('status').textContent = "已連線";
+      document.getElementById('winner').textContent = room.buzz?.locked ? room.buzz.winnerName : "等待中";
+      const grid = document.getElementById('tableGrid'); grid.innerHTML = '';
+      const last = room.history ? room.history[room.history.length-1] : null;
+      if(last) last.dealt.forEach(d => {
+        grid.innerHTML += `<div class="imgbox"><img src="${d.photo}"></div>`;
+      });
     });
-  }
-
-  function renderTable(room){
-    const grid = $('tableGrid'); grid.innerHTML = '';
-    const last = room.history ? room.history[room.history.length-1] : null;
-    if(last) last.dealt.forEach(d => {
-      grid.innerHTML += `<div class="imgbox"><img src="${d.photo}"></div>`;
-    });
-  }
-
-  $('btnNext').onclick = async ()=>{
-    const snap = await db.ref(`rooms/${curPin}`).get();
-    const room = snap.val();
-    const round = (room.round || 0) + 1;
-    const dealt = [];
-    for(let i=0; i<6; i++) dealt.push({photo: room.photos[Math.floor(Math.random()*room.photos.length)]});
-    const history = (room.history || []).concat([{round, dealt}]);
-    await db.ref(`rooms/${curPin}`).update({round, history, buzz:{locked:false}});
   };
-  $('btnResetBuzz').onclick = ()=> db.ref(`rooms/${curPin}/buzz`).set({locked:false});
-  window.onkeydown = (e)=>{ if(e.key.toLowerCase()==='n') $('btnNext').click(); };
+
+  document.getElementById('btnNext').onclick = async () => {
+    const snap = await db.ref(`rooms/${pin}`).get();
+    const r = snap.val();
+    const round = (r.round || 0) + 1;
+    const dealt = Array.from({length:6}, () => ({photo: `https://picsum.photos/400/600?sig=${Math.random()}`}));
+    const history = (r.history || []).concat([{round, dealt}]);
+    await db.ref(`rooms/${pin}`).update({round, history, buzz:{locked:false}});
+  };
+  document.getElementById('btnReset').onclick = () => db.ref(`rooms/${pin}/buzz`).set({locked:false});
 </script>
 </body>
 </html>
-
