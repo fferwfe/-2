@@ -5,567 +5,125 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>主持人｜德國心臟病</title>
   <style>
-    :root{
-      --bg:#061427; --text:#eaf2ff; --muted:#9bb3d6; --bd:rgba(255,255,255,.12);
-      --card:rgba(255,255,255,.06); --good:#32d583; --warn:#ffd166; --bad:#ff6b6b;
-    }
+    :root{ --bg:#061427; --text:#eaf2ff; --muted:#9bb3d6; --bd:rgba(255,255,255,.12); --card:rgba(255,255,255,.06); --good:#32d583; --warn:#ffd166; --bad:#ff6b6b; }
     *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#040b16,#061427 45%, #030812);color:var(--text);
-      font-family:system-ui,-apple-system,"Noto Sans TC","Microsoft JhengHei",Segoe UI,Roboto,Arial;}
-    header{position:sticky;top:0;z-index:10;background:rgba(3,8,18,.78);backdrop-filter: blur(10px);
-      border-bottom:1px solid rgba(255,255,255,.07);}
+    body{margin:0;background:linear-gradient(180deg,#040b16,#061427 45%, #030812);color:var(--text); font-family:system-ui,-apple-system,sans-serif;}
+    header{position:sticky;top:0;z-index:10;background:rgba(3,8,18,.78);backdrop-filter: blur(10px); border-bottom:1px solid rgba(255,255,255,.07);}
     .wrap{max-width:1200px;margin:0 auto;padding:14px 16px;}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-    .title{font-weight:900;letter-spacing:.5px}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;
-      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
-    .pill b{font-size:18px}
-    .btn{appearance:none;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--text);
-      padding:10px 12px;border-radius:12px;font-weight:800;cursor:pointer}
-    .btn:hover{background:rgba(255,255,255,.10)}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px; background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
+    .btn{appearance:none;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--text); padding:10px 12px;border-radius:12px;font-weight:800;cursor:pointer}
     .btn.primary{background:rgba(70,120,255,.25);border-color:rgba(70,120,255,.45)}
-    .btn.good{background:rgba(50,213,131,.18);border-color:rgba(50,213,131,.45)}
-    .btn.warn{background:rgba(255,209,102,.18);border-color:rgba(255,209,102,.45)}
-    .btn.bad{background:rgba(255,107,107,.18);border-color:rgba(255,107,107,.45)}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
-    @media (max-width: 980px){.grid{grid-template-columns:1fr}}
     .card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:14px}
-    .big{font-size:26px;font-weight:900;margin-bottom:6px}
-    .muted{color:var(--muted)}
-    .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-top:10px}
-    label{font-size:13px;color:var(--muted)}
-    input,select{background:rgba(0,0,0,.20);border:1px solid rgba(255,255,255,.14);color:var(--text);
-      padding:10px;border-radius:12px}
-    a{color:#9cc3ff}
-    .kvs{display:grid;grid-template-columns:140px 1fr;gap:8px;margin-top:10px}
-    .kvs div{padding:8px 10px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08);border-radius:12px}
-    .players{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
-    .pchip{padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.10);min-width:170px}
-    .pchip .name{font-weight:900}
-    .pchip .sub{font-size:12px;color:var(--muted);margin-top:4px}
-    .log{max-height:240px;overflow:auto;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.18);padding:10px}
-    .logline{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;color:#cfe0ff;margin:6px 0}
-    .tableGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
-    @media (max-width: 980px){.tableGrid{grid-template-columns:repeat(2,1fr)}}
-    @media (max-width: 560px){.tableGrid{grid-template-columns:1fr}}
-    .seat{background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:12px}
-    .seat h3{margin:0 0 8px}
-    .imgbox{height:190px;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.25);
-      display:flex;align-items:center;justify-content:center;overflow:hidden}
-    .imgbox img{width:100%;height:100%;object-fit:cover;display:block}
-    .file{margin-top:8px;font-size:12px;color:var(--muted)}
-    .warnbox{border:1px solid rgba(255,209,102,.35);background:rgba(255,209,102,.08);padding:10px;border-radius:14px}
+    .log{max-height:200px;overflow:auto;background:rgba(0,0,0,0.2);padding:10px;border-radius:10px;font-size:12px}
+    .tableGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+    .imgbox{height:150px;background:rgba(0,0,0,0.3);border-radius:10px;overflow:hidden}
+    img{width:100%;height:100%;object-fit:cover}
   </style>
 </head>
 <body>
 <header>
   <div class="wrap row">
-    <div class="title">德國心臟病｜主持人</div>
-    <div class="row" style="gap:8px;">
+    <div style="font-weight:900">德國心臟病｜主持人</div>
+    <div class="row">
       <span class="pill">PIN：<b id="pin">----</b></span>
-      <span class="pill">狀態：<b id="status">未開始</b></span>
-
       <button class="btn primary" id="btnCreate">建立房間</button>
-      <button class="btn good" id="btnStart" disabled>開始（開放玩家搶）</button>
-      <button class="btn warn" id="btnPause" disabled>暫停/繼續（P）</button>
-
-      <button class="btn" id="btnNext" disabled>下一輪（N）</button>
-      <button class="btn" id="btnPrev" disabled>上一輪（U）</button>
+      <button class="btn" id="btnNext" disabled>下一輪 (N)</button>
       <button class="btn" id="btnResetBuzz" disabled>清除搶答</button>
-      <button class="btn" id="btnExport" disabled>匯出CSV</button>
     </div>
   </div>
 </header>
-
 <div class="wrap">
-  <div class="warnbox">
-    <div style="font-weight:900;margin-bottom:6px;">使用流程</div>
-    <ol class="muted" style="margin:0 0 0 18px;">
-      <li>按「建立房間」→ 分享加入連結給玩家（手機）</li>
-      <li>玩家加入後，按「開始」→ 玩家會去 guest.html（只能搶）</li>
-      <li>你按「下一輪」→ 系統發 6 張不同照片（同回合不重複）</li>
-      <li>投影機用 game.html（只顯示牌面）</li>
-    </ol>
-  </div>
-
   <div class="grid">
     <div class="card">
-      <div class="big">房間設定</div>
-      <div class="controls">
-        <div>
-          <label>玩家數（固定 6 可不動）</label><br>
-          <select id="playerCount">
-            <option value="6" selected>6</option>
-          </select>
-        </div>
-
-        <div>
-          <label>翻牌間隔（毫秒）</label><br>
-          <input id="intervalMs" type="number" min="200" step="50" value="900">
-        </div>
-
-        <div>
-          <label>同回合不重複</label><br>
-          <select id="noDupInRound">
-            <option value="1" selected>是</option>
-            <option value="0">否</option>
-          </select>
-        </div>
-
-        <div>
-          <label>跨回合允許重複</label><br>
-          <select id="dupAcrossRounds">
-            <option value="1" selected>是</option>
-            <option value="0">否（照片要夠多）</option>
-          </select>
-        </div>
-
-        <button class="btn primary" id="btnApply" disabled>套用設定</button>
-      </div>
-
-      <div class="kvs">
-        <div class="muted">加入網址</div>
-        <div><a id="joinUrl" target="_blank" rel="noopener">（建立房間後顯示）</a></div>
-
-        <div class="muted">手機搶答頁</div>
-        <div><a id="guestUrl" target="_blank" rel="noopener">（建立房間後顯示）</a></div>
-
-        <div class="muted">投影牌桌頁</div>
-        <div><a id="gameUrl" target="_blank" rel="noopener">（建立房間後顯示）</a></div>
-      </div>
-
-      <div style="height:10px"></div>
-      <div class="muted" id="err" style="color:#ff9aa2;font-weight:900;white-space:pre-wrap;"></div>
+      <h3>房間狀態</h3>
+      <div id="status">未連線</div>
+      <div class="muted">加入連結：<a id="joinUrl" target="_blank" style="color:#9cc3ff">--</a></div>
     </div>
-
     <div class="card">
-      <div class="big">玩家清單</div>
-      <div class="muted">玩家自由命名。加入後即時顯示。</div>
-      <div class="players" id="players"></div>
-
-      <div style="height:10px"></div>
-      <div class="big" style="font-size:22px;">搶答狀態</div>
-      <div class="muted" id="buzzInfo">尚未有人搶答</div>
+      <h3>搶答紀錄</h3>
+      <div id="buzzInfo" style="color:var(--good);font-weight:bold">等待中...</div>
       <div class="log" id="buzzLog"></div>
     </div>
   </div>
-
-  <div class="card" style="margin-top:14px;">
-    <div class="big" style="font-size:22px;">主持人牌桌（當輪 6 張）</div>
-    <div class="muted" id="tableInfo">等待發牌…</div>
+  <div class="card" style="margin-top:14px">
+    <h3>目前牌面 (第 <span id="roundNum">0</span> 輪)</h3>
     <div class="tableGrid" id="tableGrid"></div>
-  </div>
-
-  <div class="card" style="margin-top:14px;">
-    <div class="big" style="font-size:22px;">事件紀錄</div>
-    <div class="log" id="hostLog"></div>
   </div>
 </div>
 
-<!-- Firebase (compat) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <script>
-  // 你的 Firebase 設定（Realtime Database 必須有 databaseURL）
   const firebaseConfig = {
     apiKey: "AIzaSyCmbM5JgUphfWil3ImVi7GFtVrfeE7jzm4",
-    authDomain: "fr44-31112.firebaseapp.com",
-    databaseURL: "https://fr44-31112-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "fr44-31112",
-    storageBucket: "fr44-31112.appspot.com",
-    messagingSenderId: "399575656230",
+    authDomain: "fe55-dbd87.firebaseapp.com",
+    databaseURL: "https://fe55-dbd87-default-rtdb.firebaseio.com",
+    projectId: "fe55-dbd87",
+    storageBucket: "fe55-dbd87.appspot.com",
     appId: "1:399575656230:web:e9bbdc7cc1d242a216c3e7"
   };
-
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
-
   const $ = (id)=>document.getElementById(id);
-  const baseUrl = new URL('.', location.href);
-  const abs = (p)=>new URL(p, baseUrl).toString();
+  let curPin = null;
 
-  let pin = null;
-
-  const logHost = (msg)=>{
-    const el=document.createElement('div');
-    el.className='logline';
-    el.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
-    $('hostLog').prepend(el);
-  };
-  const logBuzz = (msg)=>{
-    const el=document.createElement('div');
-    el.className='logline';
-    el.textContent=msg;
-    $('buzzLog').prepend(el);
-  };
-  const setErr = (t)=>$('err').textContent = t || '';
-
-  function randPin(){
-    return String(Math.floor(100000 + Math.random()*900000));
-  }
-  function shuffle(a){
-    const arr=a.slice();
-    for(let i=arr.length-1;i>0;i--){
-      const j=Math.floor(Math.random()*(i+1));
-      [arr[i],arr[j]]=[arr[j],arr[i]];
-    }
-    return arr;
-  }
   async function loadPhotos(){
-    const r = await fetch(abs('photos.json'), {cache:'no-store'});
-    if(!r.ok) throw new Error(`photos.json 讀取失敗：${r.status}`);
-    const list = await r.json();
-    if(!Array.isArray(list) || list.length<6) throw new Error('photos.json 必須是陣列，且至少 6 張');
-    return list;
-  }
-
-  function setLinks(pin){
-    $('joinUrl').textContent = abs(`join.html#pin=${pin}`);
-    $('joinUrl').href = abs(`join.html#pin=${pin}`);
-
-    $('guestUrl').textContent = abs(`guest.html?pin=${pin}`);
-    $('guestUrl').href = abs(`guest.html?pin=${pin}`);
-
-    $('gameUrl').textContent = abs(`game.html?pin=${pin}`);
-    $('gameUrl').href = abs(`game.html?pin=${pin}`);
-  }
-
-  function setButtonsEnabled(on){
-    $('btnStart').disabled = !on;
-    $('btnPause').disabled = !on;
-    $('btnNext').disabled  = !on;
-    $('btnPrev').disabled  = !on;
-    $('btnResetBuzz').disabled = !on;
-    $('btnExport').disabled = !on;
-    $('btnApply').disabled = !on;
-  }
-
-  async function createRoom(){
-    setErr('');
-    $('btnCreate').disabled = true;
-
-    try{
-      const photos = await loadPhotos();
-
-      // 避免 PIN 撞到
-      for(let i=0;i<10;i++){
-        const candidate = randPin();
-        const exists = (await db.ref(`rooms/${candidate}`).get()).exists();
-        if(exists) continue;
-
-        pin = candidate;
-        $('pin').textContent = pin;
-        setLinks(pin);
-
-        const settings = {
-          playerCount: Number($('playerCount').value),
-          intervalMs: Number($('intervalMs').value),
-          noDupInRound: $('noDupInRound').value === '1',
-          dupAcrossRounds: $('dupAcrossRounds').value === '1'
-        };
-
-        await db.ref(`rooms/${pin}`).set({
-          createdAt: Date.now(),
-          status: 'lobby',
-          settings,
-          photos,
-          deck: shuffle(photos),
-          deckIndex: 0,
-          round: 0,
-          history: [],
-          buzz: { locked:false }
-        });
-
-        await db.ref(`rooms/${pin}/players`).remove();
-        await db.ref(`rooms/${pin}/buzzEvents`).remove();
-
-        setButtonsEnabled(true);
-        subscribeAll();
-        logHost(`建立房間 PIN=${pin}（照片 ${photos.length} 張）`);
-        $('btnCreate').disabled = false;
-        return;
-      }
-      throw new Error('PIN 撞號太多次，請再按一次建立房間');
-    }catch(e){
-      setErr(String(e?.message || e));
-      $('btnCreate').disabled = false;
+    try {
+      const r = await fetch('photos.json');
+      return await r.json();
+    } catch(e) {
+      return Array.from({length:10}, (_,i)=>`https://picsum.photos/400/600?sig=${i}`);
     }
   }
 
-  async function applySettings(){
-    if(!pin) return;
-    const settings = {
-      playerCount: Number($('playerCount').value),
-      intervalMs: Number($('intervalMs').value),
-      noDupInRound: $('noDupInRound').value === '1',
-      dupAcrossRounds: $('dupAcrossRounds').value === '1'
-    };
-    await db.ref(`rooms/${pin}/settings`).set(settings);
-    logHost(`套用設定：${JSON.stringify(settings)}`);
-  }
-
-  async function startGame(){
-    if(!pin) return;
-    await db.ref(`rooms/${pin}/status`).set('playing');
-    logHost('狀態→playing（玩家可搶）');
-  }
-
-  async function togglePause(){
-    if(!pin) return;
-    const s = (await db.ref(`rooms/${pin}/status`).get()).val();
-    const next = (s === 'paused') ? 'playing' : 'paused';
-    await db.ref(`rooms/${pin}/status`).set(next);
-    logHost(`狀態→${next}`);
-  }
-
-  async function resetBuzz(){
-    if(!pin) return;
-    await db.ref(`rooms/${pin}/buzz`).set({locked:false});
-    logHost('清除搶答（解鎖）');
-  }
-
-  // 發下一輪：同回合 6 張不重複；跨回合是否重複依設定
-  async function nextRound(){
-    if(!pin) return;
-    const roomSnap = await db.ref(`rooms/${pin}`).get();
-    const room = roomSnap.val();
-    if(!room) return;
-
-    const settings = room.settings || {};
-    const playerCount = Number(settings.playerCount || 6);
-    const noDupInRound = !!settings.noDupInRound;
-    const dupAcrossRounds = !!settings.dupAcrossRounds;
-
-    const photos = room.photos || [];
-    let deck = room.deck || shuffle(photos);
-    let deckIndex = Number(room.deckIndex || 0);
-    let round = Number(room.round || 0) + 1;
-    let history = Array.isArray(room.history) ? room.history : [];
-
-    const usedAll = new Set();
-    if(!dupAcrossRounds){
-      for(const h of history){
-        for(const d of (h.dealt||[])) usedAll.add(d.photo);
-      }
-    }
-
-    const usedThisRound = new Set();
-    const dealt = [];
-
-    const takeOne = ()=>{
-      for(let tries=0; tries<photos.length*3; tries++){
-        if(deckIndex >= deck.length){ deck = shuffle(photos); deckIndex = 0; }
-        const c = deck[deckIndex++];
-        if(noDupInRound && usedThisRound.has(c)) continue;
-        if(!dupAcrossRounds && usedAll.has(c)) continue;
-        return c;
-      }
-      // 不夠時 fallback（通常是你選「整場不重複」但照片不足）
-      return deck[Math.floor(Math.random()*deck.length)];
-    };
-
-    for(let seat=1; seat<=playerCount; seat++){
-      const photo = takeOne();
-      dealt.push({seat, photo});
-      usedThisRound.add(photo);
-    }
-
-    history = history.concat([{round, dealt, winner:null}]);
-
-    await db.ref(`rooms/${pin}`).update({
-      round, deck, deckIndex, history,
-      buzz: {locked:false}
+  $('btnCreate').onclick = async ()=>{
+    const photos = await loadPhotos();
+    curPin = String(Math.floor(100000 + Math.random()*900000));
+    await db.ref(`rooms/${curPin}`).set({
+      status: 'playing', round: 0, photos, history: [], buzz: {locked:false}
     });
+    $('pin').textContent = curPin;
+    $('joinUrl').textContent = new URL(`join.html#pin=${curPin}`, location.href);
+    $('joinUrl').href = `join.html#pin=${curPin}`;
+    $('btnNext').disabled = $('btnResetBuzz').disabled = false;
+    subscribe();
+  };
 
-    logHost(`第 ${round} 輪發牌完成`);
-  }
-
-  async function prevRound(){
-    if(!pin) return;
-    const roomSnap = await db.ref(`rooms/${pin}`).get();
-    const room = roomSnap.val();
-    const history = Array.isArray(room?.history) ? room.history : [];
-    if(history.length === 0) return;
-
-    history.pop();
-    const round = history.length ? history[history.length-1].round : 0;
-
-    await db.ref(`rooms/${pin}`).update({
-      history,
-      round,
-      buzz: {locked:false}
-    });
-
-    logHost(`上一輪：回到第 ${round} 輪`);
-  }
-
-  async function exportCSV(){
-    if(!pin) return;
-    const room = (await db.ref(`rooms/${pin}`).get()).val();
-    const history = Array.isArray(room?.history) ? room.history : [];
-
-    const lines = [['round','seat','photo','winnerName','winnerAt'].join(',')];
-    for(const h of history){
-      const wName = h.winner?.name || '';
-      const wAt   = h.winner?.at || '';
-      for(const d of (h.dealt||[])){
-        lines.push([h.round, d.seat, `"${d.photo}"`, `"${wName}"`, `"${wAt}"`].join(','));
-      }
-    }
-
-    const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `heartgame_${pin}_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    logHost('已匯出 CSV');
-  }
-
-  // ===== Subscriptions =====
-  let unsub = [];
-  function clearSubs(){
-    for(const fn of unsub) fn();
-    unsub = [];
-  }
-
-  function subscribeAll(){
-    clearSubs();
-
-    // room status + render table
-    const roomRef = db.ref(`rooms/${pin}`);
-    const roomCb = roomRef.on('value', (snap)=>{
+  function subscribe(){
+    db.ref(`rooms/${curPin}`).on('value', snap => {
       const room = snap.val();
       if(!room) return;
-      $('status').textContent =
-        room.status === 'lobby' ? '等待加入' :
-        room.status === 'playing' ? '進行中' :
-        room.status === 'paused' ? '暫停' : (room.status||'未知');
-
+      $('status').textContent = "遊戲進行中";
+      $('roundNum').textContent = room.round;
+      if(room.buzz?.locked){
+        $('buzzInfo').textContent = "勝者：" + room.buzz.winnerName;
+        $('buzzLog').innerHTML += `<div>[${room.buzz.at}] ${room.buzz.winnerName} 搶答</div>`;
+      } else { $('buzzInfo').textContent = "可以搶答"; }
       renderTable(room);
-      renderBuzz(room);
     });
-    unsub.push(()=>roomRef.off('value', roomCb));
-
-    // players
-    const playersRef = db.ref(`rooms/${pin}/players`);
-    const playersCb = playersRef.on('value', (snap)=>{
-      const v = snap.val() || {};
-      const arr = Object.entries(v).map(([id,p])=>({id, ...p}))
-        .sort((a,b)=>(a.joinedAt||0)-(b.joinedAt||0));
-
-      const box = $('players');
-      box.innerHTML = '';
-      if(arr.length===0){
-        const div=document.createElement('div');
-        div.className='muted';
-        div.textContent='尚未有玩家加入';
-        box.appendChild(div);
-        return;
-      }
-      for(const p of arr){
-        const div=document.createElement('div');
-        div.className='pchip';
-        div.innerHTML = `<div class="name">${escapeHtml(p.name||'未命名')}</div>
-                         <div class="sub">加入：${new Date(p.joinedAt||Date.now()).toLocaleTimeString()}</div>`;
-        box.appendChild(div);
-      }
-    });
-    unsub.push(()=>playersRef.off('value', playersCb));
-
-    // buzz events (last 20)
-    const eventsRef = db.ref(`rooms/${pin}/buzzEvents`);
-    const evCb = eventsRef.limitToLast(20).on('child_added', (snap)=>{
-      const e = snap.val();
-      const line = `${new Date(e.ts||Date.now()).toLocaleTimeString()}  ${e.name}  BUZZ`;
-      logBuzz(line);
-    });
-    unsub.push(()=>eventsRef.off('child_added', evCb));
   }
 
   function renderTable(room){
-    const history = Array.isArray(room.history) ? room.history : [];
-    const last = history[history.length-1];
-    if(!last){
-      $('tableInfo').textContent='等待發牌…';
-      $('tableGrid').innerHTML='';
-      return;
-    }
-    $('tableInfo').textContent=`目前第 ${last.round} 輪`;
-    const grid = $('tableGrid');
-    grid.innerHTML='';
-    for(const d of (last.dealt||[])){
-      const div=document.createElement('div');
-      div.className='seat';
-      const file = (d.photo||'').split('/').pop();
-      div.innerHTML = `
-        <h3>玩家${d.seat}</h3>
-        <div class="imgbox">
-          <img src="${abs(d.photo)}" alt="玩家${d.seat}"
-               onerror="this.style.display='none'; this.parentElement.textContent='圖片載入失敗：${d.photo}';">
-        </div>
-        <div class="file">${escapeHtml(file)}</div>
-      `;
-      grid.appendChild(div);
-    }
+    const grid = $('tableGrid'); grid.innerHTML = '';
+    const last = room.history ? room.history[room.history.length-1] : null;
+    if(last) last.dealt.forEach(d => {
+      grid.innerHTML += `<div class="imgbox"><img src="${d.photo}"></div>`;
+    });
   }
 
-  function renderBuzz(room){
-    const buzz = room.buzz || {};
-    if(!buzz.locked){
-      $('buzzInfo').textContent = '尚未有人搶答（或已清除搶答）';
-      return;
-    }
-    $('buzzInfo').textContent = `已鎖定：${buzz.winnerName||'未知'}（${buzz.at||''}）`;
-
-    // 同步把勝者寫進本輪 history（只寫一次）
-    const history = Array.isArray(room.history) ? room.history : [];
-    if(history.length===0) return;
-    const last = history[history.length-1];
-    if(last?.winner) return; // 已寫過
-    const newLast = {...last, winner:{name:buzz.winnerName||'', at:buzz.at||''}};
-    const newHistory = history.slice(0,-1).concat([newLast]);
-    db.ref(`rooms/${pin}/history`).set(newHistory);
-    logHost(`勝者：${buzz.winnerName||'未知'}`);
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
-  }
-
-  // ===== Buttons / Keys =====
-  $('btnCreate').onclick = createRoom;
-  $('btnApply').onclick = applySettings;
-  $('btnStart').onclick = startGame;
-  $('btnPause').onclick = togglePause;
-  $('btnNext').onclick = nextRound;
-  $('btnPrev').onclick = prevRound;
-  $('btnResetBuzz').onclick = resetBuzz;
-  $('btnExport').onclick = exportCSV;
-
-  window.addEventListener('keydown', (e)=>{
-    const k = e.key.toLowerCase();
-    if(k==='p') togglePause();
-    if(k==='n') nextRound();
-    if(k==='u') prevRound();
-  });
-
-  // 支援 ?pin=xxxxxx 直接載入房間（主持人重開用）
-  (async ()=>{
-    const urlPin = new URLSearchParams(location.search).get('pin');
-    if(urlPin){
-      pin = urlPin;
-      $('pin').textContent = pin;
-      setLinks(pin);
-      setButtonsEnabled(true);
-      subscribeAll();
-      logHost(`載入既有房間 PIN=${pin}`);
-    }else{
-      logHost('請按「建立房間」');
-    }
-  })();
+  $('btnNext').onclick = async ()=>{
+    const snap = await db.ref(`rooms/${curPin}`).get();
+    const room = snap.val();
+    const round = (room.round || 0) + 1;
+    const dealt = [];
+    for(let i=0; i<6; i++) dealt.push({photo: room.photos[Math.floor(Math.random()*room.photos.length)]});
+    const history = (room.history || []).concat([{round, dealt}]);
+    await db.ref(`rooms/${curPin}`).update({round, history, buzz:{locked:false}});
+  };
+  $('btnResetBuzz').onclick = ()=> db.ref(`rooms/${curPin}/buzz`).set({locked:false});
+  window.onkeydown = (e)=>{ if(e.key.toLowerCase()==='n') $('btnNext').click(); };
 </script>
 </body>
 </html>
