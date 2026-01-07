@@ -1,22 +1,11 @@
 <!doctype html>
 <html lang="zh-Hant">
-<head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>加入｜德國心臟病</title>
-  <style>
-    body{background:#061427;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif}
-    .card{background:rgba(255,255,255,.1);padding:30px;border-radius:20px;text-align:center;width:300px}
-    input{width:100%;padding:12px;margin:10px 0;border-radius:10px;border:none}
-    button{width:100%;padding:12px;background:#32d583;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h2>加入遊戲</h2>
-    <input id="pin" placeholder="PIN 碼" type="text">
-    <input id="name" placeholder="您的名字" type="text">
-    <button id="btnJoin">立即加入</button>
-  </div>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>加入遊戲</title></head>
+<body style="background:#061427;color:#fff;text-align:center;padding:50px;font-family:sans-serif">
+  <h2>加入房間</h2>
+  <input id="pin" placeholder="PIN" style="padding:10px;margin:10px"><br>
+  <input id="name" placeholder="名字" style="padding:10px;margin:10px"><br>
+  <button id="btnJoin" style="padding:10px 20px;background:#32d583;border:none;border-radius:10px;font-weight:bold">進入</button>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script>
@@ -27,22 +16,14 @@
       projectId: "fe55-dbd87"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    
-    // 自動填入 URL 帶來的 PIN
     const hash = new URLSearchParams(location.hash.replace('#',''));
     if(hash.get('pin')) document.getElementById('pin').value = hash.get('pin');
-
-    document.getElementById('btnJoin').onclick = async ()=>{
+    document.getElementById('btnJoin').onclick = async () => {
       const pin = document.getElementById('pin').value;
       const name = document.getElementById('name').value;
-      const snap = await db.ref(`rooms/${pin}`).get();
-      if(!snap.exists()) return alert("找不到房間");
-      const pid = 'p' + Date.now();
-      await db.ref(`rooms/${pin}/players/${pid}`).set({name});
-      location.href = `guest.html?pin=${pin}&pid=${pid}&name=${encodeURIComponent(name)}`;
+      if(!pin || !name) return alert("必填");
+      location.href = `guest.html?pin=${pin}&name=${encodeURIComponent(name)}`;
     };
   </script>
 </body>
 </html>
-
