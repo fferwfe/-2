@@ -1,19 +1,10 @@
 <!doctype html>
 <html lang="zh-Hant">
-<head>
-  <meta charset="utf-8" /><title>大螢幕</title>
-  <style>
-    body{background:#040b16;color:#fff;text-align:center;font-family:sans-serif}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:20px;max-width:1000px;margin:0 auto}
-    .box{height:250px;background:rgba(255,255,255,0.05);border-radius:15px;overflow:hidden}
-    img{width:100%;height:100%;object-fit:cover}
-    #win{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:120px;color:#32d583;display:none;font-weight:900}
-  </style>
-</head>
-<body>
-  <h1>房間: <span id="ps">----</span> | 第 <span id="rs">0</span> 輪</h1>
-  <div class="grid" id="grid"></div>
-  <div id="win"></div>
+<head><meta charset="utf-8" /><title>大螢幕</title></head>
+<body style="background:#040b16;color:#fff;text-align:center;font-family:sans-serif">
+  <h1>PIN: <span id="pinShow">----</span></h1>
+  <div id="grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:20px"></div>
+  <div id="win" style="font-size:100px;color:#32d583;font-weight:bold"></div>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script>
@@ -24,23 +15,17 @@
       projectId: "fe55-dbd87"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
     const pin = new URLSearchParams(location.search).get('pin');
-    document.getElementById('ps').textContent = pin;
-
-    db.ref(`rooms/${pin}`).on('value', snap => {
+    document.getElementById('pinShow').textContent = pin;
+    firebase.database().ref(`rooms/${pin}`).on('value', snap => {
       const room = snap.val(); if(!room) return;
-      document.getElementById('rs').textContent = room.round;
       const grid = document.getElementById('grid'); grid.innerHTML = '';
       const last = room.history ? room.history[room.history.length-1] : null;
       if(last) last.dealt.forEach(d => {
-        grid.innerHTML += `<div class="box"><img src="${d.photo}"></div>`;
+        grid.innerHTML += `<div style="height:250px;background:#222"><img src="${d.photo}" style="width:100%;height:100%;object-fit:cover"></div>`;
       });
-      const win = document.getElementById('win');
-      if(room.buzz?.locked){ win.textContent = room.buzz.winnerName; win.style.display = 'block'; }
-      else { win.style.display = 'none'; }
+      document.getElementById('win').textContent = room.buzz?.locked ? room.buzz.winnerName : "";
     });
   </script>
 </body>
 </html>
-
