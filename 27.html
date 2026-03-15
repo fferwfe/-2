@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>知識大挑戰｜超完整版闖關版</title>
+  <title>知識大挑戰｜闖關版</title>
   <style>
     :root{
       --bg1:#eef5ff;
@@ -174,7 +174,7 @@
 
     .status-grid{
       display:grid;
-      grid-template-columns:repeat(3, minmax(0,1fr));
+      grid-template-columns:repeat(4, minmax(0,1fr));
       gap:10px;
     }
 
@@ -225,6 +225,11 @@
       width:0%;
       border-radius:999px;
       transition:width .25s ease;
+    }
+
+    #time-bar{
+      background:linear-gradient(90deg, #20b15a, #ffb300, #ef5350);
+      width:100%;
     }
 
     #stage-bar{
@@ -373,6 +378,13 @@
       margin:8px 0 10px;
     }
 
+    .timeout{
+      color:var(--red);
+      font-size:1.25rem;
+      font-weight:900;
+      margin-bottom:10px;
+    }
+
     .score-ring{
       width:180px;
       height:180px;
@@ -420,7 +432,7 @@
 
     .summary-grid{
       display:grid;
-      grid-template-columns:repeat(3, minmax(0,1fr));
+      grid-template-columns:repeat(4, minmax(0,1fr));
       gap:10px;
       margin-top:18px;
     }
@@ -468,19 +480,19 @@
 
     <section class="screen active" id="start-screen">
       <div class="hero">
-        <div style="font-size:3rem;">📘🏆</div>
+        <div style="font-size:3rem;">📘⏱️</div>
         <h1>知識大挑戰</h1>
         <p>
           這是一個結合生活知識、認知判斷與觀察理解的闖關測驗。
-          全程固定 <strong>50 題</strong>，共分成 <strong>5 關</strong>，每關 10 題。
+          全程固定 <strong>50 題</strong>、總限時 <strong>300 秒</strong>，共分成 <strong>5 關</strong>。
         </p>
       </div>
 
       <div class="badge-row">
         <div class="badge">固定 50 題</div>
+        <div class="badge">總限時 300 秒</div>
         <div class="badge">共 5 關</div>
         <div class="badge">每關 10 題</div>
-        <div class="badge">闖關模式</div>
       </div>
 
       <div class="panel">
@@ -491,16 +503,16 @@
             共 50 題，分成 5 關，每 10 題一關。
           </div>
           <div class="rule-card">
-            <strong>② 作答方式</strong>
+            <strong>② 計時機制</strong>
+            總共 300 秒，時間到會自動結算成績。
+          </div>
+          <div class="rule-card">
+            <strong>③ 作答方式</strong>
             每題只有 1 個正確答案，答完才能進入下一題。
           </div>
           <div class="rule-card">
-            <strong>③ 題目內容</strong>
-            題目以生活現象、知識判斷與觀察理解為主。
-          </div>
-          <div class="rule-card">
             <strong>④ 最終評級</strong>
-            依正確題數給予稱號，例如：知識王、挑戰高手。
+            依正確題數給予稱號，例如：知識王者、挑戰高手。
           </div>
         </div>
       </div>
@@ -521,7 +533,7 @@
       </div>
 
       <div class="footer-tip">
-        建議使用手機直式畫面或平板操作。答對會自動標示正解，並可手動進入下一題。
+        建議使用手機直式畫面或平板操作。剩下 10 秒時會有倒數提示音。
       </div>
     </section>
 
@@ -540,10 +552,20 @@
             <div class="k">目前得分</div>
             <div class="v" id="score-text">0</div>
           </div>
+          <div class="status-card">
+            <div class="k">剩餘秒數</div>
+            <div class="v" id="time-text">300</div>
+          </div>
         </div>
 
         <div class="panel progress-wrap">
           <div class="progress-head">
+            <span>總時間</span>
+            <span id="time-label">300 秒</span>
+          </div>
+          <div class="bar"><div id="time-bar"></div></div>
+
+          <div class="progress-head" style="margin-top:6px;">
             <span>本關進度</span>
             <span id="stage-progress-text">1 / 10</span>
           </div>
@@ -551,18 +573,19 @@
         </div>
 
         <div class="question-box">
-          <div class="stage-banner" id="stage-banner">🏁 第一關｜暖身關</div>
+          <div class="stage-banner" id="stage-banner">🏁 第 1 關｜暖身關</div>
           <div class="question" id="question-text"></div>
           <div class="options" id="option-container"></div>
           <div class="result-msg" id="result-msg"></div>
           <button class="btn btn-orange" id="next-btn" style="display:none; margin-top:14px;" onclick="nextQuestion()">下一題</button>
-          <div class="legend">答完一題後即可進入下一題，完成 10 題會進入下一關。</div>
+          <div class="legend">總限時 300 秒，時間到會直接結算。</div>
         </div>
       </div>
     </section>
 
     <section class="screen" id="final-screen">
       <div class="final-head">
+        <div id="timeout-msg" class="timeout" style="display:none;">⏰ 時間到，挑戰結束</div>
         <div style="font-size:3rem;">🏆</div>
         <h2 id="final-title">挑戰完成</h2>
       </div>
@@ -587,6 +610,10 @@
           <div class="v" id="sum-wrong">0</div>
         </div>
         <div class="summary-card">
+          <div class="k">剩餘秒數</div>
+          <div class="v" id="sum-time">0</div>
+        </div>
+        <div class="summary-card">
           <div class="k">完成題數</div>
           <div class="v" id="sum-reached">0</div>
         </div>
@@ -607,8 +634,8 @@
     <div class="overlay-card">
       <div class="overlay-emoji" id="overlay-emoji">🎉</div>
       <div class="overlay-title" id="overlay-title">準備開始！</div>
-      <div class="overlay-desc" id="overlay-desc">全程 50 題，共 5 關。</div>
-      <button class="btn btn-primary" id="overlay-btn" onclick="closeOverlay()">繼續</button>
+      <div class="overlay-desc" id="overlay-desc">全程 50 題，總限時 300 秒。</div>
+      <button class="btn btn-primary" onclick="closeOverlay()">繼續</button>
     </div>
   </div>
 
@@ -624,7 +651,6 @@
       {"q":"8. 站著等人通常會覺得時間？","o":["A. 比較快","B. 比較慢","C. 沒差","D. 看心情"],"a":"B"},
       {"q":"9. 人對時間最不準確的時候通常是？","o":["A. 放鬆","B. 專心","C. 緊張","D. 睡前"],"a":"C"},
       {"q":"10. 以下哪個情況最容易讓時間感覺變慢？","o":["A. 玩遊戲","B. 聽音樂","C. 等待","D. 聊天"],"a":"C"},
-
       {"q":"11. 熱的食物聞起來比較香主要原因是？","o":["A. 顏色","B. 油脂","C. 分子擴散較快","D. 心理作用"],"a":"C"},
       {"q":"12. 為什麼考試時常覺得時間過很快？","o":["A. 題目少","B. 專注度高","C. 太緊張","D. 鐘壞了"],"a":"B"},
       {"q":"13. 人類其實最不擅長的是？","o":["A. 記臉","B. 多工處理","C. 語言","D. 運動"],"a":"B"},
@@ -635,7 +661,6 @@
       {"q":"18. 「望梅止渴」主要影響的是？","o":["A. 聽覺","B. 視覺","C. 想像力","D. 觸覺"],"a":"C"},
       {"q":"19. 人在什麼情況下最容易產生時間錯覺？","o":["A. 專注","B. 睡覺","C. 運動","D. 聊天"],"a":"A"},
       {"q":"20. 大腦處理資訊量增加時時間感會？","o":["A. 變快","B. 變慢","C. 不變","D. 消失"],"a":"B"},
-
       {"q":"21. 當你感到無聊時大腦通常會？","o":["A. 停止運作","B. 尋找刺激","C. 變得準確","D. 進入睡眠"],"a":"B"},
       {"q":"22. 為什麼滑社群媒體常常停不下來？","o":["A. 螢幕亮","B. 持續刺激","C. 手會累","D. 字太小"],"a":"B"},
       {"q":"23. 「心流」狀態下時間感會？","o":["A. 變慢","B. 變快","C. 消失","D. 變準確"],"a":"B"},
@@ -646,7 +671,6 @@
       {"q":"28. 人在壓力大時時間感通常？","o":["A. 變快","B. 變慢","C. 不變","D. 消失"],"a":"B"},
       {"q":"29. 多工處理對時間判斷影響？","o":["A. 更準","B. 更不準","C. 沒影響","D. 變慢"],"a":"B"},
       {"q":"30. 哪種感官對時間節奏最敏感？","o":["A. 視覺","B. 聽覺","C. 嗅覺","D. 觸覺"],"a":"B"},
-
       {"q":"31. 哪種情境會讓人感覺時間過很慢？","o":["A. 排隊","B. 聊天","C. 玩遊戲","D. 看電影"],"a":"A"},
       {"q":"32. 為什麼無聊時常會一直看時間？","o":["A. 想確認時間","B. 大腦專注時間","C. 習慣","D. 太安靜"],"a":"A"},
       {"q":"33. 人在運動時時間感通常？","o":["A. 變快","B. 變慢","C. 不變","D. 消失"],"a":"B"},
@@ -657,7 +681,6 @@
       {"q":"38. 哪個最容易讓人忘記時間？","o":["A. 等人","B. 專注創作","C. 看鐘","D. 無聊"],"a":"B"},
       {"q":"39. 為什麼下課前幾分鐘特別漫長？","o":["A. 疲勞","B. 想離開","C. 注意時間","D. 以上皆是"],"a":"D"},
       {"q":"40. 哪一項能幫助時間判斷更準？","o":["A. 分心","B. 多工","C. 外在提示","D. 疲勞"],"a":"C"},
-
       {"q":"41. 人最容易分心的時候是？","o":["A. 精神好","B. 疲累","C. 運動後","D. 剛睡醒"],"a":"B"},
       {"q":"42. 以下哪個與時間錯覺無關？","o":["A. 專注","B. 情緒","C. 注意力","D. 血型"],"a":"D"},
       {"q":"43. 為什麼排隊時會覺得時間很慢？","o":["A. 無聊","B. 專注時間","C. 不動","D. 以上皆是"],"a":"D"},
@@ -672,6 +695,7 @@
 
     const TOTAL_QUESTIONS = 50;
     const QUESTIONS_PER_STAGE = 10;
+    const TOTAL_TIME = 300;
 
     let currentQuestions = [];
     let currentIndex = 0;
@@ -680,6 +704,8 @@
     let soundEnabled = true;
     let gameEnded = false;
     let pendingStageMessage = false;
+    let totalSecondsLeft = TOTAL_TIME;
+    let timerInterval = null;
 
     const startScreen = document.getElementById('start-screen');
     const quizScreen = document.getElementById('quiz-screen');
@@ -693,6 +719,9 @@
     const progressText = document.getElementById('progress-text');
     const stageText = document.getElementById('stage-text');
     const scoreText = document.getElementById('score-text');
+    const timeText = document.getElementById('time-text');
+    const timeLabel = document.getElementById('time-label');
+    const timeBar = document.getElementById('time-bar');
     const stageBar = document.getElementById('stage-bar');
     const stageProgressText = document.getElementById('stage-progress-text');
     const stageBanner = document.getElementById('stage-banner');
@@ -719,12 +748,17 @@
       answered = false;
       gameEnded = false;
       pendingStageMessage = false;
+      totalSecondsLeft = TOTAL_TIME;
+
+      clearInterval(timerInterval);
+      timerInterval = null;
 
       showScreen('quiz');
       updateTopStatus();
       showQuestion();
+      startTimer();
 
-      showOverlay("🚀", "挑戰開始！", `全程 ${TOTAL_QUESTIONS} 題，共 5 關，準備開始答題。`);
+      showOverlay("🚀", "挑戰開始！", `全程 ${TOTAL_QUESTIONS} 題，總限時 ${TOTAL_TIME} 秒。`);
       playStartSound();
     }
 
@@ -754,16 +788,43 @@
     }
 
     function updateTopStatus(){
-      const stage = getStageNumber(currentIndex);
-      const inStageIndex = (currentIndex % QUESTIONS_PER_STAGE) + 1;
+      const safeIndex = Math.min(currentIndex, TOTAL_QUESTIONS - 1);
+      const stage = getStageNumber(safeIndex);
+      const inStageIndex = (safeIndex % QUESTIONS_PER_STAGE) + 1;
       const stagePercent = Math.max((inStageIndex / QUESTIONS_PER_STAGE) * 100, 0);
+      const timePercent = Math.max((totalSecondsLeft / TOTAL_TIME) * 100, 0);
 
-      progressText.textContent = `${currentIndex + 1} / ${TOTAL_QUESTIONS}`;
+      progressText.textContent = `${Math.min(currentIndex + 1, TOTAL_QUESTIONS)} / ${TOTAL_QUESTIONS}`;
       stageText.textContent = `第 ${stage} 關`;
       scoreText.textContent = score;
+      timeText.textContent = totalSecondsLeft;
+      timeLabel.textContent = `${totalSecondsLeft} 秒`;
+      timeBar.style.width = `${timePercent}%`;
       stageProgressText.textContent = `${inStageIndex} / ${QUESTIONS_PER_STAGE}`;
       stageBar.style.width = `${stagePercent}%`;
       stageBanner.textContent = `🏁 第 ${stage} 關｜${getStageName(stage)}`;
+    }
+
+    function startTimer(){
+      updateTopStatus();
+
+      timerInterval = setInterval(() => {
+        if(gameEnded) return;
+
+        totalSecondsLeft--;
+        if(totalSecondsLeft < 0) totalSecondsLeft = 0;
+        updateTopStatus();
+
+        if(totalSecondsLeft <= 10 && totalSecondsLeft > 0){
+          playTickSound();
+        }
+
+        if(totalSecondsLeft <= 0){
+          clearInterval(timerInterval);
+          timerInterval = null;
+          endGame(true);
+        }
+      }, 1000);
     }
 
     function showQuestion(){
@@ -821,7 +882,7 @@
       updateTopStatus();
 
       if(currentIndex === TOTAL_QUESTIONS - 1){
-        setTimeout(() => endGame(), 700);
+        setTimeout(() => endGame(false), 700);
       }else{
         nextBtn.style.display = 'block';
       }
@@ -836,7 +897,7 @@
       currentIndex++;
 
       if(currentIndex >= TOTAL_QUESTIONS){
-        endGame();
+        endGame(false);
         return;
       }
 
@@ -869,20 +930,24 @@
       overlay.classList.add('show');
     }
 
-    function endGame(){
+    function endGame(isTimeout = false){
       if(gameEnded) return;
       gameEnded = true;
 
+      clearInterval(timerInterval);
+      timerInterval = null;
       overlay.classList.remove('show');
       showScreen('final');
 
       const reached = answered ? currentIndex + 1 : currentIndex;
       const wrong = Math.max(reached - score, 0);
 
-      document.getElementById('final-title').textContent = '挑戰完成';
+      document.getElementById('timeout-msg').style.display = isTimeout ? 'block' : 'none';
+      document.getElementById('final-title').textContent = isTimeout ? '時間到，挑戰結束' : '挑戰完成';
       document.getElementById('final-score').textContent = `${score} / ${TOTAL_QUESTIONS}`;
       document.getElementById('sum-correct').textContent = score;
       document.getElementById('sum-wrong').textContent = wrong;
+      document.getElementById('sum-time').textContent = totalSecondsLeft;
       document.getElementById('sum-reached').textContent = reached;
 
       const rankInfo = getRank(score);
@@ -934,6 +999,8 @@
     }
 
     function goStart(){
+      clearInterval(timerInterval);
+      timerInterval = null;
       overlay.classList.remove('show');
       gameEnded = false;
       pendingStageMessage = false;
@@ -994,6 +1061,10 @@
       beep(720, 100, 'triangle', 0.03);
       setTimeout(() => beep(900, 100, 'triangle', 0.03), 100);
       setTimeout(() => beep(1120, 180, 'triangle', 0.03), 220);
+    }
+
+    function playTickSound(){
+      beep(880, 60, 'square', 0.02);
     }
   </script>
 </body>
