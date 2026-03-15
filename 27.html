@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>時間感知與注意力挑戰｜超完整版闖關版</title>
+  <title>知識大挑戰｜超完整版闖關版</title>
   <style>
     :root{
       --bg1:#eef5ff;
@@ -174,7 +174,7 @@
 
     .status-grid{
       display:grid;
-      grid-template-columns:repeat(4, minmax(0,1fr));
+      grid-template-columns:repeat(3, minmax(0,1fr));
       gap:10px;
     }
 
@@ -225,11 +225,6 @@
       width:0%;
       border-radius:999px;
       transition:width .25s ease;
-    }
-
-    #time-bar{
-      background:linear-gradient(90deg, #20b15a, #ffb300, #ef5350);
-      width:100%;
     }
 
     #stage-bar{
@@ -313,17 +308,6 @@
       font-size:1.08rem;
     }
 
-    .plus-time{
-      display:inline-block;
-      margin-top:8px;
-      padding:8px 12px;
-      border-radius:999px;
-      background:#eaf8ef;
-      color:#15803d;
-      border:1px solid #b7e7c7;
-      font-size:.95rem;
-    }
-
     .legend{
       margin-top:14px;
       color:var(--muted);
@@ -389,13 +373,6 @@
       margin:8px 0 10px;
     }
 
-    .timeout{
-      color:var(--red);
-      font-size:1.25rem;
-      font-weight:900;
-      margin-bottom:10px;
-    }
-
     .score-ring{
       width:180px;
       height:180px;
@@ -443,7 +420,7 @@
 
     .summary-grid{
       display:grid;
-      grid-template-columns:repeat(4, minmax(0,1fr));
+      grid-template-columns:repeat(3, minmax(0,1fr));
       gap:10px;
       margin-top:18px;
     }
@@ -489,22 +466,21 @@
   <div class="app">
     <div class="top-deco"></div>
 
-    <!-- 開始畫面 -->
     <section class="screen active" id="start-screen">
       <div class="hero">
-        <div style="font-size:3rem;">⏳🧠</div>
-        <h1>時間感知與注意力挑戰</h1>
+        <div style="font-size:3rem;">📘🏆</div>
+        <h1>知識大挑戰</h1>
         <p>
-          這是一個結合時間壓力、注意力切換、生活經驗與認知判斷的闖關測驗。
-          全程固定 <strong>50 題</strong>、總限時 <strong>300 秒</strong>，答對還能獲得加秒獎勵。
+          這是一個結合生活知識、認知判斷與觀察理解的闖關測驗。
+          全程固定 <strong>50 題</strong>，共分成 <strong>5 關</strong>，每關 10 題。
         </p>
       </div>
 
       <div class="badge-row">
         <div class="badge">固定 50 題</div>
-        <div class="badge">總限時 300 秒</div>
-        <div class="badge">每答對 +3 秒</div>
         <div class="badge">共 5 關</div>
+        <div class="badge">每關 10 題</div>
+        <div class="badge">闖關模式</div>
       </div>
 
       <div class="panel">
@@ -515,16 +491,16 @@
             共 50 題，分成 5 關，每 10 題一關。
           </div>
           <div class="rule-card">
-            <strong>② 時間機制</strong>
-            一開始 300 秒，答對 1 題加 3 秒，時間到自動結算。
-          </div>
-          <div class="rule-card">
-            <strong>③ 作答方式</strong>
+            <strong>② 作答方式</strong>
             每題只有 1 個正確答案，答完才能進入下一題。
           </div>
           <div class="rule-card">
+            <strong>③ 題目內容</strong>
+            題目以生活現象、知識判斷與觀察理解為主。
+          </div>
+          <div class="rule-card">
             <strong>④ 最終評級</strong>
-            依正確題數給予稱號，例如：時間大師、注意力高手。
+            依正確題數給予稱號，例如：知識王、挑戰高手。
           </div>
         </div>
       </div>
@@ -532,15 +508,15 @@
       <div class="panel">
         <div class="section-title">評級標準</div>
         <div class="rule-grid">
-          <div class="rule-card"><strong>45–50 題</strong>🧠 時間大師</div>
-          <div class="rule-card"><strong>35–44 題</strong>⚡ 注意力高手</div>
+          <div class="rule-card"><strong>45–50 題</strong>👑 知識王者</div>
+          <div class="rule-card"><strong>35–44 題</strong>🌟 挑戰高手</div>
           <div class="rule-card"><strong>25–34 題</strong>👍 不錯的觀察者</div>
-          <div class="rule-card"><strong>0–24 題</strong>🙂 再試一次</div>
+          <div class="rule-card"><strong>0–24 題</strong>🙂 再接再厲</div>
         </div>
       </div>
 
       <div class="btn-row">
-        <button class="btn btn-primary" onclick="startGame()">開始闖關</button>
+        <button class="btn btn-primary" onclick="startGame()">開始挑戰</button>
         <button class="btn btn-ghost" onclick="toggleSound()"><span id="sound-btn-text">音效：開啟</span></button>
       </div>
 
@@ -549,7 +525,6 @@
       </div>
     </section>
 
-    <!-- 測驗畫面 -->
     <section class="screen" id="quiz-screen">
       <div class="quiz-top">
         <div class="status-grid">
@@ -565,20 +540,10 @@
             <div class="k">目前得分</div>
             <div class="v" id="score-text">0</div>
           </div>
-          <div class="status-card">
-            <div class="k">剩餘秒數</div>
-            <div class="v" id="time-text">300</div>
-          </div>
         </div>
 
         <div class="panel progress-wrap">
           <div class="progress-head">
-            <span>總時間</span>
-            <span id="time-label">300 秒</span>
-          </div>
-          <div class="bar"><div id="time-bar"></div></div>
-
-          <div class="progress-head" style="margin-top:6px;">
             <span>本關進度</span>
             <span id="stage-progress-text">1 / 10</span>
           </div>
@@ -591,17 +556,15 @@
           <div class="options" id="option-container"></div>
           <div class="result-msg" id="result-msg"></div>
           <button class="btn btn-orange" id="next-btn" style="display:none; margin-top:14px;" onclick="nextQuestion()">下一題</button>
-          <div class="legend">答對會加 3 秒；時間到將直接結算成績。</div>
+          <div class="legend">答完一題後即可進入下一題，完成 10 題會進入下一關。</div>
         </div>
       </div>
     </section>
 
-    <!-- 結果畫面 -->
     <section class="screen" id="final-screen">
       <div class="final-head">
-        <div id="timeout-msg" class="timeout" style="display:none;">⏰ 時間結束！</div>
         <div style="font-size:3rem;">🏆</div>
-        <h2 id="final-title">闖關完成</h2>
+        <h2 id="final-title">挑戰完成</h2>
       </div>
 
       <div class="score-ring" id="score-ring">
@@ -611,7 +574,7 @@
         </div>
       </div>
 
-      <div class="final-rank" id="final-rank">🙂 再試一次</div>
+      <div class="final-rank" id="final-rank">🙂 再接再厲</div>
       <div class="final-msg" id="final-msg"></div>
 
       <div class="summary-grid">
@@ -624,11 +587,7 @@
           <div class="v" id="sum-wrong">0</div>
         </div>
         <div class="summary-card">
-          <div class="k">剩餘秒數</div>
-          <div class="v" id="sum-time">0</div>
-        </div>
-        <div class="summary-card">
-          <div class="k">闖到第幾題</div>
+          <div class="k">完成題數</div>
           <div class="v" id="sum-reached">0</div>
         </div>
       </div>
@@ -639,17 +598,16 @@
       </div>
 
       <div class="footer-tip">
-        這份活動主要測試你在時間壓力下的注意力分配、情緒影響、時間估計與認知判斷能力。
+        這份活動主要測試你的生活知識、理解能力與作答穩定度。
       </div>
     </section>
   </div>
 
-  <!-- 關卡過關 / 開場 overlay -->
   <div class="overlay" id="overlay">
     <div class="overlay-card">
       <div class="overlay-emoji" id="overlay-emoji">🎉</div>
       <div class="overlay-title" id="overlay-title">準備開始！</div>
-      <div class="overlay-desc" id="overlay-desc">全程 50 題，300 秒，答對加秒。</div>
+      <div class="overlay-desc" id="overlay-desc">全程 50 題，共 5 關。</div>
       <button class="btn btn-primary" id="overlay-btn" onclick="closeOverlay()">繼續</button>
     </div>
   </div>
@@ -713,15 +671,11 @@
     ];
 
     const TOTAL_QUESTIONS = 50;
-    const TOTAL_TIME = 300;
-    const BONUS_SECONDS = 3;
     const QUESTIONS_PER_STAGE = 10;
 
     let currentQuestions = [];
     let currentIndex = 0;
     let score = 0;
-    let totalSecondsLeft = TOTAL_TIME;
-    let timerInterval = null;
     let answered = false;
     let soundEnabled = true;
     let gameEnded = false;
@@ -739,9 +693,6 @@
     const progressText = document.getElementById('progress-text');
     const stageText = document.getElementById('stage-text');
     const scoreText = document.getElementById('score-text');
-    const timeText = document.getElementById('time-text');
-    const timeLabel = document.getElementById('time-label');
-    const timeBar = document.getElementById('time-bar');
     const stageBar = document.getElementById('stage-bar');
     const stageProgressText = document.getElementById('stage-progress-text');
     const stageBanner = document.getElementById('stage-banner');
@@ -765,20 +716,15 @@
       currentQuestions = shuffleArray(allQuestions).slice(0, TOTAL_QUESTIONS);
       currentIndex = 0;
       score = 0;
-      totalSecondsLeft = TOTAL_TIME;
       answered = false;
       gameEnded = false;
       pendingStageMessage = false;
 
-      clearInterval(timerInterval);
-      timerInterval = null;
-
       showScreen('quiz');
       updateTopStatus();
       showQuestion();
-      startTimer();
 
-      showOverlay("🚀", "挑戰開始！", `全程 ${TOTAL_QUESTIONS} 題，總限時 ${TOTAL_TIME} 秒，答對每題可加 ${BONUS_SECONDS} 秒。`);
+      showOverlay("🚀", "挑戰開始！", `全程 ${TOTAL_QUESTIONS} 題，共 5 關，準備開始答題。`);
       playStartSound();
     }
 
@@ -800,8 +746,8 @@
       const names = {
         1: "暖身關",
         2: "專注關",
-        3: "節奏關",
-        4: "壓力關",
+        3: "挑戰關",
+        4: "進階關",
         5: "終極關"
       };
       return names[stage] || "挑戰關";
@@ -810,39 +756,14 @@
     function updateTopStatus(){
       const stage = getStageNumber(currentIndex);
       const inStageIndex = (currentIndex % QUESTIONS_PER_STAGE) + 1;
-      const timePercent = Math.max((totalSecondsLeft / TOTAL_TIME) * 100, 0);
       const stagePercent = Math.max((inStageIndex / QUESTIONS_PER_STAGE) * 100, 0);
 
       progressText.textContent = `${currentIndex + 1} / ${TOTAL_QUESTIONS}`;
       stageText.textContent = `第 ${stage} 關`;
       scoreText.textContent = score;
-      timeText.textContent = totalSecondsLeft;
-      timeLabel.textContent = `${totalSecondsLeft} 秒`;
-      timeBar.style.width = `${timePercent}%`;
       stageProgressText.textContent = `${inStageIndex} / ${QUESTIONS_PER_STAGE}`;
       stageBar.style.width = `${stagePercent}%`;
       stageBanner.textContent = `🏁 第 ${stage} 關｜${getStageName(stage)}`;
-    }
-
-    function startTimer(){
-      updateTopStatus();
-
-      timerInterval = setInterval(() => {
-        totalSecondsLeft--;
-        updateTopStatus();
-
-        if(totalSecondsLeft <= 10 && totalSecondsLeft > 0){
-          playTickSound();
-        }
-
-        if(totalSecondsLeft <= 0){
-          totalSecondsLeft = 0;
-          updateTopStatus();
-          clearInterval(timerInterval);
-          timerInterval = null;
-          endGame(true);
-        }
-      }, 1000);
     }
 
     function showQuestion(){
@@ -886,9 +807,8 @@
 
       if(selectedLetter === correctLetter){
         score++;
-        totalSecondsLeft += BONUS_SECONDS;
         clickedBtn.classList.add('correct');
-        resultMsg.innerHTML = `✅ 答對了！<br><span class="plus-time">+${BONUS_SECONDS} 秒</span>`;
+        resultMsg.textContent = `✅ 答對了！`;
         resultMsg.style.color = '#15803d';
         playCorrectSound();
       }else{
@@ -901,7 +821,7 @@
       updateTopStatus();
 
       if(currentIndex === TOTAL_QUESTIONS - 1){
-        setTimeout(() => endGame(false), 700);
+        setTimeout(() => endGame(), 700);
       }else{
         nextBtn.style.display = 'block';
       }
@@ -916,7 +836,7 @@
       currentIndex++;
 
       if(currentIndex >= TOTAL_QUESTIONS){
-        endGame(false);
+        endGame();
         return;
       }
 
@@ -949,25 +869,20 @@
       overlay.classList.add('show');
     }
 
-    function endGame(isTimeout){
+    function endGame(){
       if(gameEnded) return;
       gameEnded = true;
 
-      clearInterval(timerInterval);
-      timerInterval = null;
       overlay.classList.remove('show');
-
       showScreen('final');
 
       const reached = answered ? currentIndex + 1 : currentIndex;
       const wrong = Math.max(reached - score, 0);
 
-      document.getElementById('timeout-msg').style.display = isTimeout ? 'block' : 'none';
-      document.getElementById('final-title').textContent = isTimeout ? '時間到，挑戰結束' : '闖關完成';
+      document.getElementById('final-title').textContent = '挑戰完成';
       document.getElementById('final-score').textContent = `${score} / ${TOTAL_QUESTIONS}`;
       document.getElementById('sum-correct').textContent = score;
       document.getElementById('sum-wrong').textContent = wrong;
-      document.getElementById('sum-time').textContent = totalSecondsLeft;
       document.getElementById('sum-reached').textContent = reached;
 
       const rankInfo = getRank(score);
@@ -981,29 +896,29 @@
     function getRank(scoreValue){
       if(scoreValue >= 45){
         return {
-          emoji:"🧠",
-          title:"時間大師",
-          msg:"你的表現非常強，不只速度快，判斷也穩定，代表你在注意力分配與時間感知上有很好的掌握。"
+          emoji:"👑",
+          title:"知識王者",
+          msg:"你的表現非常出色，作答穩定、判斷清楚，整體知識掌握度很高。"
         };
       }
       if(scoreValue >= 35){
         return {
-          emoji:"⚡",
-          title:"注意力高手",
-          msg:"你能在時間壓力下維持不錯的專注力，整體節奏感與作答效率都很出色。"
+          emoji:"🌟",
+          title:"挑戰高手",
+          msg:"你在整體作答上很有水準，答題節奏和判斷能力都相當不錯。"
         };
       }
       if(scoreValue >= 25){
         return {
           emoji:"👍",
           title:"不錯的觀察者",
-          msg:"你的基本判斷很穩，已經具備良好的觀察與思考能力，再多練幾次會更強。"
+          msg:"你已具備不錯的知識與理解能力，再多挑戰幾次，表現會更穩。"
         };
       }
       return {
         emoji:"🙂",
-        title:"再試一次",
-        msg:"這類題目很吃注意力與節奏感，別擔心，再玩一次通常就會明顯進步。"
+        title:"再接再厲",
+        msg:"這次先熟悉題型就好，再玩一次，通常就會有明顯進步。"
       };
     }
 
@@ -1019,8 +934,6 @@
     }
 
     function goStart(){
-      clearInterval(timerInterval);
-      timerInterval = null;
       overlay.classList.remove('show');
       gameEnded = false;
       pendingStageMessage = false;
@@ -1064,10 +977,6 @@
     function playWrongSound(){
       beep(260, 140, 'sawtooth', 0.03);
       setTimeout(() => beep(190, 180, 'sawtooth', 0.028), 70);
-    }
-
-    function playTickSound(){
-      beep(880, 60, 'square', 0.02);
     }
 
     function playStageSound(){
