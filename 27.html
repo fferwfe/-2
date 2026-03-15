@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>時間感知與注意力挑戰</title>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f0f4f8; display: flex; justify-content: center; padding: 20px; }
+        #quiz-container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 600px; width: 100%; }
+        h1 { color: #1a73e8; text-align: center; margin-bottom: 20px; }
+        .setting-group { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #eef; }
+        label { font-weight: bold; display: block; margin-bottom: 8px; color: #444; }
+        select, input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px; box-sizing: border-box; }
+        
+        #timer-wrapper { width: 100%; height: 12px; background: #eee; border-radius: 6px; margin-bottom: 20px; overflow: hidden; display: none; }
+        #timer-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #34a853, #fbbc05, #ea4335); transition: width 0.1s linear; }
+        
+        .question { font-size: 1.3rem; margin-bottom: 20px; font-weight: bold; color: #222; }
+        .options { display: grid; gap: 10px; }
+        button.opt-btn { padding: 15px; font-size: 1rem; cursor: pointer; border: 2px solid #eee; border-radius: 10px; background: #fff; text-align: left; transition: 0.2s; }
+        button.opt-btn:hover:not(:disabled) { border-color: #1a73e8; background: #f0f7ff; }
+        
+        .correct { background: #d4edda !important; border-color: #28a745 !important; color: #155724; }
+        .wrong { background: #f8d7da !important; border-color: #dc3545 !important; color: #721c24; }
+        
+        /* 這裡稍微修改了按鈕樣式 */
+        #main-btn, #next-q-btn { background: #1a73e8; color: white; border: none; padding: 16px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; margin-top: 20px; }
+        #next-q-btn { background: #ff9800; } /* 下一題按鈕改為橙色，更好辨認 */
+        #main-btn:hover { background: #1557b0; }
+        #next-q-btn:hover { background: #e68a00; }
+        
+        #info-bar { display: flex; justify-content: space-between; margin-bottom: 10px; color: #666; font-weight: bold; }
+        .timeout-msg { color: #ea4335; font-size: 1.5rem; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <div id="setup-box">
+        <h1>⚙️ 測驗設定</h1>
+        <div class="setting-group">
+            <label>1. 選擇總題數：</label>
+            <select id="total-q">
+                <option value="5">5 題</option>
+                <option value="10" selected>10 題</option>
+                <option value="20">20 題</option>
+                <option value="50">全部 50 題</option>
+            </select>
+        </div>
+        <div class="setting-group">
+            <label>2. 時間模式：</label>
+            <select id="time-mode" onchange="toggleTimeMode()">
+                <option value="total">總共限時 (時間到自動結算)</option>
+                <option value="per-q">每題限時 (適合衝刺)</option>
+                <option value="none">不限時間</option>
+            </select>
+            <div id="time-val-box">
+                <label id="time-label">總共秒數：</label>
+                <input type="number" id="time-input" value="60" min="1">
+            </div>
+        </div>
+        <button id="main-btn" onclick="startGame()">開始測驗</button>
+    </div>
+
+    <div id="quiz-box" style="display:none;">
+        <div id="info-bar">
+            <span id="progress-text"></span>
+            <span id="timer-text"></span>
+        </div>
+        <div id="timer-wrapper"><div id="timer-bar"></div></div>
+        <div class="question" id="question-text"></div>
+        <div class="options" id="option-container"></div>
+        <div id="result-msg" style="text-align:center; margin-top:20px; font-weight:bold; min-height:1.2em;"></div>
+        <button id="next-q-btn" style="display:none;" onclick="nextQuestion()">下一題</button>
+    </div>
+
+    <div id="final-box" style="display:none; text-align:center;">
+        <div id="timeout-status" class="timeout-msg" style="display:none;">⏰ 時間結束！</div>
+        <h1 id="final-title">測驗完成</h1>
+        <p id="final-score-text" style="font-size: 1.2rem; margin-top: 10px;">你在限時內答對了：</p>
+        <p id="final-score" style="font-size: 3.5rem; color: #1a73e8; font-weight: bold; margin: 5px 0;"></p>
+        <p id="final-msg"></p>
+        <button id="main-btn" onclick="location.reload()">重新挑戰</button>
+    </div>
+</div>
+
+<script>
+    const allQuestions = [
+        {"q": "1. 人類是如何感覺時間的?", "o": ["A. 透過心跳", "B. 透過眼睛", "C. 大腦推算", "D. 天生內建時鐘"], "a": "C"},
+        {"q": "2. 哪種情況最容易覺得時間過很快?", "o": ["A. 等公車", "B. 專心玩遊戲", "C. 發呆", "D. 看時鐘"], "a": "B"},
+        {"q": "3. 一心多用時，大腦實際上在做什麼？", "o": ["A. 同時處理", "B. 忽略其中一件", "C. 快速切換", "D. 自動加速"], "a": "C"},
+        {"q": "4. 為什麼滑手機常常不知不覺過很久?", "o": ["A. 手會累", "B. 光線影響", "C. 重複刺激", "D. 螢幕太小"], "a": "C"},
+        {"q": "5. 夾紅豆這類動作會影響哪一種能力?", "o": ["A. 記憶力", "B. 時間判斷", "C. 視力", "D. 聽力"], "a": "B"},
+        {"q": "6. 人一天平均眨眼幾次？", "o": ["A. 約 100 次", "B. 約 500 次", "C. 約 1,000 次", "D. 超過 10,000 次"], "a": "D"},
+        {"q": "7. 為什麼我們不會感覺到自己眨眼？", "o": ["A. 太快", "B. 大腦補畫面", "C. 眼睛關太緊", "D. 習慣了"], "a": "B"},
+        {"q": "8. 站著等人通常會覺得？", "o": ["A. 比較快", "B. 比較慢", "C. 沒差", "D. 看心情"], "a": "B"},
+        {"q": "9. 人對時間最不準確的時候是？", "o": ["A. 放鬆", "B. 專心", "C. 緊張", "D. 睡前"], "a": "C"},
+        {"q": "10. 以下哪個會讓時間感覺變慢？", "o": ["A. 玩遊戲", "B. 聽音樂", "C. 等待", "D. 聊天"], "a": "C"},
+        {"q": "11. 熱的食物聞起來比較香，主要原因是？", "o": ["A. 顏色", "B. 油脂", "C. 分子擴轉快", "D. 心理作用"], "a": "C"},
+        {"q": "12. 為什麼考試時時間過特別快？", "o": ["A. 題目少", "B. 專注度高", "C. 太緊張", "D. 鐘壞了"], "a": "B"},
+        {"q": "13. 人類其實最不擅長的是？", "o": ["A. 記臉", "B. 多工處理", "C. 語言", "D. 運動"], "a": "B"},
+        {"q": "14. 哪個行為最容易讓人低估時間？", "o": ["A. 數秒", "B. 看鐘", "C. 做手部動作", "D. 發呆"], "a": "C"},
+        {"q": "15. 背景音樂會影響時間感，主要影響的是？", "o": ["A. 記憶力", "B. 注意力分配", "C. 聽力", "D. 視力"], "a": "B"},
+        {"q": "16. 當你覺得時間過得很慢時，通常是因為？", "o": ["A. 沒事做", "B. 正在專心", "C. 很快樂", "D. 正在睡覺"], "a": "A"},
+        {"q": "17. 哪種情緒會讓時間感「變慢」？", "o": ["A. 快樂", "B. 恐懼", "C. 平靜", "D. 興奮"], "a": "B"},
+        {"q": "18. 「望梅止渴」主要影響的是？", "o": ["A. 聽覺", "B. 視覺", "C. 想像力", "D. 觸覺"], "a": "B"},
+        {"q": "19. 人在什麼情況下最容易產生「時間錯覺」？", "o": ["A. 專注時", "B. 睡覺時", "C. 運動時", "D. 聊天時"], "a": "A"},
+        {"q": "20. 大腦處理資訊量增加時，時間感會？", "o": ["A. 變快", "B. 變慢", "C. 不變", "D. 消失"], "a": "B"},
+        {"q": "21. 當你感到無聊時，大腦會？", "o": ["A. 停止運作", "B. 尋找刺激", "C. 變得很準確", "D. 進入睡眠"], "a": "B"},
+        {"q": "22. 哪種顏色通常會讓人覺得時間過得比較慢？", "o": ["A. 紅色", "B. 藍色", "C. 綠色", "D. 黃色"], "a": "A"},
+        {"q": "23. 「心流」狀態下，時間感會？", "o": ["A. 變慢", "B. 變快", "C. 消失", "D. 變準確"], "a": "B"},
+        {"q": "24. 人在什麼年齡層通常覺得時間過得最快？", "o": ["A. 幼兒", "B. 青少年", "C. 中年", "D. 老年"], "a": "D"},
+        {"q": "25. 為什麼小時候覺得一年很長？", "o": ["A. 記憶點多", "B. 沒事做", "C. 動作慢", "D. 睡得多"], "a": "A"},
+        {"q": "26. 哪種情況會讓人覺得時間過得特別快？", "o": ["A. 等公車", "B. 玩遊戲", "C. 上無聊的課", "D. 生病時"], "a": "B"},
+        {"q": "27. 「注意力不集中」會導致時間感？", "o": ["A. 變快", "B. 變慢", "C. 變準確", "D. 消失"], "a": "A"},
+        {"q": "28. 人在壓力大時，時間感通常會？", "o": ["A. 變快", "B. 變慢", "C. 不變", "D. 消失"], "a": "B"},
+        {"q": "29. 「多工處理」對時間判斷的影響是？", "o": ["A. 變得更準確", "B. 變得不準確", "C. 沒有影響", "D. 縮短感知時間"], "a": "B"},
+        {"q": "30. 哪種感官對時間的感知最敏銳？", "o": ["A. 視覺", "B. 聽覺", "C. 觸覺", "D. 嗅覺"], "a": "B"},
+        {"q": "31. 哪種情緒會讓人覺得時間過得特別慢？", "o": ["A. 快樂", "B. 恐懼", "C. 興奮", "D. 放鬆"], "a": "B"},
+        {"q": "32. 「眨眼」會導致短暫的時間感？", "o": ["A. 變快", "B. 變慢", "C. 消失", "D. 變準確"], "a": "B"},
+        {"q": "33. 人在運動時，時間感通常會？", "o": ["A. 變快", "B. 變慢", "C. 不變", "D. 消失"], "a": "B"},
+        {"q": "34. 「咖啡因」對時間感知的影響是？", "o": ["A. 覺得時間變慢", "B. 覺得時間變快", "C. 沒有影響", "D. 變得更準確"], "a": "B"},
+        {"q": "35. 哪種環境會讓人覺得時間過得比較快？", "o": ["A. 吵雜的環境", "B. 安靜的環境", "C. 熟悉的環境", "D. 陌生的環境"], "a": "C"},
+        {"q": "36. 以下哪個是時間判斷的常見錯誤？", "o": ["A. 高估", "B. 低估", "C. 忽略", "D. 以上皆是"], "a": "D"},
+        {"q": "37. 人類對時間的感覺屬於？", "o": ["A. 客觀", "B. 固定", "C. 主觀", "D. 精準"], "a": "C"},
+        {"q": "38. 哪個最容易讓人忘記時間？", "o": ["A. 等人", "B. 專注創作", "C. 看鐘", "D. 無聊"], "a": "B"},
+        {"q": "39. 為什麼上課最後 5 分鐘特別漫長？", "o": ["A. 疲勞", "B. 想下課", "C. 注意時間", "D. 以上皆是"], "a": "D"},
+        {"q": "40. 哪一項能幫助時間判斷更準？", "o": ["A. 分心", "B. 多工", "C. 外在提示", "D. 疲勞"], "a": "C"},
+        {"q": "41. 人最容易分心的時候是？", "o": ["A. 精神好", "B. 疲累", "C. 運動後", "D. 剛睡醒"], "a": "B"},
+        {"q": "42. 以下哪個與時間錯覺無關？", "o": ["A. 專注", "B. 情緒", "C. 注意力", "D. 血型"], "a": "D"},
+        {"q": "43. 為什麼無聊時特別想看時間？", "o": ["A. 想確認", "B. 大腦專注", "C. 習慣", "D. 太安靜"], "a": "B"},
+        {"q": "44. 哪個會讓時間感覺變慢？", "o": ["A. 緊張", "B. 投入", "C. 專心", "D. 興奮"], "a": "A"},
+        {"q": "45. 哪一種情境最容易產生錯覺？", "o": ["A. 單調", "B. 熟悉", "C. 重複", "D. 以上皆是"], "a": "D"},
+        {"q": "46. 為什麼做實驗時要控制變因？", "o": ["A. 比較快", "B. 比較準", "C. 比較簡單", "D. 比較好玩"], "a": "B"},
+        {"q": "47. 人類注意力被打斷後，恢復需要？", "o": ["A. 馬上", "B. 幾秒", "C. 一段時間", "D. 不會恢復"], "a": "C"},
+        {"q": "48. 以下哪個最符合大腦實際運作？", "o": ["A. 永遠專注", "B. 容易分心", "C. 不會疲勞", "D. 完全理性"], "a": "B"},
+        {"q": "49. 為什麼重複動作會讓人放空？", "o": ["A. 無聊", "B. 大腦省力", "C. 肌肉記憶", "D. 太累"], "a": "B"},
+        {"q": "50. 這個闖關活動主要在測什麼？", "o": ["A. 手眼協調", "B. 記憶力", "C. 時間感知", "D. 反應速度"], "a": "C"}
+    ];
+
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timerInterval;
+    let timeMode, timeLimitValue, totalSecondsLeft;
+
+    function toggleTimeMode() {
+        const mode = document.getElementById('time-mode').value;
+        const box = document.getElementById('time-val-box');
+        const label = document.getElementById('time-label');
+        const input = document.getElementById('time-input');
+        
+        box.style.display = (mode === 'none') ? 'none' : 'block';
+        if (mode === 'per-q') {
+            label.innerText = "每題秒數：";
+            input.value = 10;
+        } else 
