@@ -5,32 +5,149 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>時間感知與注意力挑戰</title>
     <style>
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f0f4f8; display: flex; justify-content: center; padding: 20px; }
-        #quiz-container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 600px; width: 100%; }
-        h1 { color: #1a73e8; text-align: center; margin-bottom: 20px; }
-        .setting-group { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #eef; }
-        label { font-weight: bold; display: block; margin-bottom: 8px; color: #444; }
-        select, input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px; box-sizing: border-box; }
-        
-        #timer-wrapper { width: 100%; height: 12px; background: #eee; border-radius: 6px; margin-bottom: 20px; overflow: hidden; display: none; }
-        #timer-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #34a853, #fbbc05, #ea4335); transition: width 0.1s linear; }
-        
-        .question { font-size: 1.3rem; margin-bottom: 20px; font-weight: bold; color: #222; }
-        .options { display: grid; gap: 10px; }
-        button.opt-btn { padding: 15px; font-size: 1rem; cursor: pointer; border: 2px solid #eee; border-radius: 10px; background: #fff; text-align: left; transition: 0.2s; }
-        button.opt-btn:hover:not(:disabled) { border-color: #1a73e8; background: #f0f7ff; }
-        
-        .correct { background: #d4edda !important; border-color: #28a745 !important; color: #155724; }
-        .wrong { background: #f8d7da !important; border-color: #dc3545 !important; color: #721c24; }
-        
-        /* 這裡稍微修改了按鈕樣式 */
-        #main-btn, #next-q-btn { background: #1a73e8; color: white; border: none; padding: 16px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; margin-top: 20px; }
-        #next-q-btn { background: #ff9800; } /* 下一題按鈕改為橙色，更好辨認 */
-        #main-btn:hover { background: #1557b0; }
-        #next-q-btn:hover { background: #e68a00; }
-        
-        #info-bar { display: flex; justify-content: space-between; margin-bottom: 10px; color: #666; font-weight: bold; }
-        .timeout-msg { color: #ea4335; font-size: 1.5rem; margin-bottom: 10px; }
+        body {
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+        #quiz-container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .setting-group {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #eef;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+            color: #444;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            background: #f2f2f2;
+            color: #666;
+        }
+
+        #timer-wrapper {
+            width: 100%;
+            height: 12px;
+            background: #eee;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            display: block;
+        }
+        #timer-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #34a853, #fbbc05, #ea4335);
+            transition: width 0.1s linear;
+        }
+
+        .question {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #222;
+            line-height: 1.6;
+        }
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+        button.opt-btn {
+            padding: 15px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            background: #fff;
+            text-align: left;
+            transition: 0.2s;
+        }
+        button.opt-btn:hover:not(:disabled) {
+            border-color: #1a73e8;
+            background: #f0f7ff;
+        }
+        button.opt-btn:disabled {
+            cursor: default;
+        }
+
+        .correct {
+            background: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        .wrong {
+            background: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+
+        #main-btn, #next-q-btn, #restart-btn {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 20px;
+        }
+        #next-q-btn {
+            background: #ff9800;
+        }
+        #main-btn:hover, #restart-btn:hover {
+            background: #1557b0;
+        }
+        #next-q-btn:hover {
+            background: #e68a00;
+        }
+
+        #info-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #666;
+            font-weight: bold;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .timeout-msg {
+            color: #ea4335;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        .fixed-note {
+            text-align: center;
+            color: #666;
+            font-size: 0.95rem;
+            margin-top: -5px;
+        }
     </style>
 </head>
 <body>
@@ -39,26 +156,16 @@
     <div id="setup-box">
         <h1>⚙️ 測驗設定</h1>
         <div class="setting-group">
-            <label>1. 選擇總題數：</label>
-            <select id="total-q">
-                <option value="5">5 題</option>
-                <option value="10" selected>10 題</option>
-                <option value="20">20 題</option>
-                <option value="50">全部 50 題</option>
-            </select>
+            <label>題數：</label>
+            <input type="text" value="固定 50 題" readonly>
         </div>
         <div class="setting-group">
-            <label>2. 時間模式：</label>
-            <select id="time-mode" onchange="toggleTimeMode()">
-                <option value="total">總共限時 (時間到自動結算)</option>
-                <option value="per-q">每題限時 (適合衝刺)</option>
-                <option value="none">不限時間</option>
-            </select>
-            <div id="time-val-box">
-                <label id="time-label">總共秒數：</label>
-                <input type="number" id="time-input" value="60" min="1">
-            </div>
+            <label>時間模式：</label>
+            <input type="text" value="總共限時" readonly>
+            <label>總共秒數：</label>
+            <input type="text" value="300 秒" readonly>
         </div>
+        <div class="fixed-note">本測驗已固定為 50 題／300 秒</div>
         <button id="main-btn" onclick="startGame()">開始測驗</button>
     </div>
 
@@ -77,10 +184,10 @@
     <div id="final-box" style="display:none; text-align:center;">
         <div id="timeout-status" class="timeout-msg" style="display:none;">⏰ 時間結束！</div>
         <h1 id="final-title">測驗完成</h1>
-        <p id="final-score-text" style="font-size: 1.2rem; margin-top: 10px;">你在限時內答對了：</p>
+        <p id="final-score-text" style="font-size: 1.2rem; margin-top: 10px;">你總共答對了：</p>
         <p id="final-score" style="font-size: 3.5rem; color: #1a73e8; font-weight: bold; margin: 5px 0;"></p>
         <p id="final-msg"></p>
-        <button id="main-btn" onclick="location.reload()">重新挑戰</button>
+        <button id="restart-btn" onclick="location.reload()">重新挑戰</button>
     </div>
 </div>
 
@@ -138,20 +245,171 @@
         {"q": "50. 這個闖關活動主要在測什麼？", "o": ["A. 手眼協調", "B. 記憶力", "C. 時間感知", "D. 反應速度"], "a": "C"}
     ];
 
+    const TOTAL_QUESTIONS = 50;
+    const TOTAL_TIME = 300;
+
     let currentQuestions = [];
     let currentIndex = 0;
     let score = 0;
-    let timerInterval;
-    let timeMode, timeLimitValue, totalSecondsLeft;
+    let timerInterval = null;
+    let totalSecondsLeft = TOTAL_TIME;
+    let answered = false;
 
-    function toggleTimeMode() {
-        const mode = document.getElementById('time-mode').value;
-        const box = document.getElementById('time-val-box');
-        const label = document.getElementById('time-label');
-        const input = document.getElementById('time-input');
-        
-        box.style.display = (mode === 'none') ? 'none' : 'block';
-        if (mode === 'per-q') {
-            label.innerText = "每題秒數：";
-            input.value = 10;
-        } else 
+    function shuffleArray(arr) {
+        const newArr = [...arr];
+        for (let i = newArr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+        }
+        return newArr;
+    }
+
+    function startGame() {
+        currentQuestions = shuffleArray(allQuestions).slice(0, TOTAL_QUESTIONS);
+        currentIndex = 0;
+        score = 0;
+        answered = false;
+        totalSecondsLeft = TOTAL_TIME;
+
+        document.getElementById('setup-box').style.display = 'none';
+        document.getElementById('final-box').style.display = 'none';
+        document.getElementById('quiz-box').style.display = 'block';
+        document.getElementById('timeout-status').style.display = 'none';
+        document.getElementById('timer-wrapper').style.display = 'block';
+
+        clearInterval(timerInterval);
+        timerInterval = null;
+
+        startTotalTimer();
+        showQuestion();
+    }
+
+    function startTotalTimer() {
+        updateTotalTimerUI();
+        timerInterval = setInterval(() => {
+            totalSecondsLeft--;
+            updateTotalTimerUI();
+
+            if (totalSecondsLeft <= 0) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                endGame(true);
+            }
+        }, 1000);
+    }
+
+    function updateTotalTimerUI() {
+        const timerText = document.getElementById('timer-text');
+        const timerBar = document.getElementById('timer-bar');
+
+        timerText.innerText = `剩餘 ${totalSecondsLeft} 秒`;
+
+        const percent = Math.max((totalSecondsLeft / TOTAL_TIME) * 100, 0);
+        timerBar.style.width = percent + '%';
+    }
+
+    function showQuestion() {
+        answered = false;
+        const qObj = currentQuestions[currentIndex];
+
+        document.getElementById('progress-text').innerText = `第 ${currentIndex + 1} / ${currentQuestions.length} 題`;
+        document.getElementById('question-text').innerText = qObj.q;
+        document.getElementById('result-msg').innerText = '';
+        document.getElementById('next-q-btn').style.display = 'none';
+
+        const optionContainer = document.getElementById('option-container');
+        optionContainer.innerHTML = '';
+
+        qObj.o.forEach(optionText => {
+            const btn = document.createElement('button');
+            btn.className = 'opt-btn';
+            btn.innerText = optionText;
+            btn.onclick = () => selectAnswer(btn, optionText);
+            optionContainer.appendChild(btn);
+        });
+    }
+
+    function selectAnswer(clickedBtn, optionText) {
+        if (answered) return;
+        answered = true;
+
+        const qObj = currentQuestions[currentIndex];
+        const correctLetter = qObj.a;
+        const buttons = document.querySelectorAll('.opt-btn');
+
+        buttons.forEach(btn => {
+            btn.disabled = true;
+            const btnLetter = btn.innerText.trim().charAt(0);
+            if (btnLetter === correctLetter) {
+                btn.classList.add('correct');
+            }
+        });
+
+        const selectedLetter = optionText.trim().charAt(0);
+
+        if (selectedLetter === correctLetter) {
+            clickedBtn.classList.add('correct');
+            score++;
+            document.getElementById('result-msg').innerText = '✅ 答對了！';
+            document.getElementById('result-msg').style.color = '#28a745';
+        } else {
+            clickedBtn.classList.add('wrong');
+            document.getElementById('result-msg').innerText = `❌ 答錯了！正確答案是 ${correctLetter}`;
+            document.getElementById('result-msg').style.color = '#dc3545';
+        }
+
+        if (currentIndex < currentQuestions.length - 1) {
+            document.getElementById('next-q-btn').style.display = 'block';
+        } else {
+            setTimeout(() => endGame(false), 500);
+        }
+    }
+
+    function nextQuestion() {
+        currentIndex++;
+        if (currentIndex >= currentQuestions.length) {
+            endGame(false);
+        } else {
+            showQuestion();
+        }
+    }
+
+    function endGame(isTimeout = false) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+
+        document.getElementById('quiz-box').style.display = 'none';
+        document.getElementById('final-box').style.display = 'block';
+
+        if (isTimeout) {
+            document.getElementById('timeout-status').style.display = 'block';
+            document.getElementById('final-title').innerText = '時間到，測驗結束';
+        } else {
+            document.getElementById('timeout-status').style.display = 'none';
+            document.getElementById('final-title').innerText = '測驗完成';
+        }
+
+        document.getElementById('final-score-text').innerText = `你總共答對了 ${currentQuestions.length} 題中的：`;
+        document.getElementById('final-score').innerText = `${score} 題`;
+
+        let msg = '';
+        const ratio = score / currentQuestions.length;
+
+        if (ratio === 1) {
+            msg = '太厲害了！你的時間感知超強！';
+        } else if (ratio >= 0.8) {
+            msg = '表現很棒！你對時間與注意力很有掌握。';
+        } else if (ratio >= 0.6) {
+            msg = '不錯喔！再挑戰一次，成績還能更高。';
+        } else if (ratio >= 0.4) {
+            msg = '有潛力！再多練習一下時間感知吧。';
+        } else {
+            msg = '別灰心，再挑戰一次試試看！';
+        }
+
+        document.getElementById('final-msg').innerText = msg;
+    }
+</script>
+
+</body>
+</html>
